@@ -1,4 +1,4 @@
-# Amigo Perto – Monitoramento de Proximidade BLE para Cães
+# Amigo Perto – Monitoramento de Proximidade BLE para PETs
 
 Firmware embarcado em C para microcontroladores da Nordic Semiconductor, com comunicação Bluetooth Low Energy (BLE). O sistema monitora a proximidade entre o cão e o tutor, acionando um alerta sonoro na coleira quando o animal ultrapassa um limite configurado.
 
