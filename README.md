@@ -47,7 +47,7 @@ Camadas de software utilizadas:
 - Bateria compacta
 - Botão de controle
 
-## Exemplos de Estrutura de Diretórios
+## Exemplo de Estrutura de Diretórios
 
 ```
 amigo_perto/
