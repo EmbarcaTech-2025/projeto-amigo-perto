@@ -8,7 +8,11 @@ import { BluetoothService } from '../bluetooth.service';
   template: `
     <div class="scan-controls">
       <button (click)="toggleScan()" [class.scanning]="isScanning()">
-        {{ isScanning() ? 'Parar Busca' : 'Procurar Dispositivo' }}
+        @if(isScanning()) {
+          <span><i class="scanner-dot"></i>Parar Busca</span>
+        } @else {
+          <span>Procurar Dispositivo</span>
+        }
       </button>
     </div>
   `,
@@ -16,25 +20,72 @@ import { BluetoothService } from '../bluetooth.service';
     .scan-controls {
       margin-bottom: 20px;
     }
+
     button {
-      background-color: #007bff;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
       color: white;
       border: none;
-      padding: 15px 30px;
-      font-size: 16px;
-      border-radius: 5px;
+      padding: 18px 36px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px; /* Botão mais arredondado, estilo "pill" */
       cursor: pointer;
-      transition: background-color 0.3s, box-shadow 0.3s;
+      transition: transform 0.2s ease-out, box-shadow 0.3s ease-out;
+      box-shadow: 0 4px 15px var(--shadow-color);
+      position: relative;
+      overflow: hidden; /* Para o efeito de brilho */
     }
+
+    button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300%;
+        height: 300%;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.7s ease;
+    }
+
+    button:hover::before {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
     button:hover {
-      background-color: #0056b3;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(93, 23, 230, 0.3);
     }
+
     button.scanning {
-      background-color: #dc3545;
+      background: linear-gradient(45deg, var(--danger-color-start), var(--danger-color-end));
     }
+
     button.scanning:hover {
-      background-color: #c82333;
+        box-shadow: 0 8px 25px rgba(213, 51, 105, 0.4);
+    }
+
+    .scanner-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: white;
+        border-radius: 50%;
+        margin-right: 10px;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255,255,255, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(255,255,255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,255,255, 0); }
+    }
+
+    span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush

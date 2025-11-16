@@ -7,26 +7,70 @@ import { Device } from '../bluetooth.service';
   imports: [CommonModule],
   template: `
     @if (device(); as dev) {
-      <div class="device-info">
+      <div class="device-info-card">
         <h2>{{ dev.name }}</h2>
         <div class="device-stats">
-            <p><strong>RSSI:</strong> {{ dev.rssi }} dBm</p>
-            <p><strong>Distância Estimada:</strong> {{ dev.distanceCategory }}</p>
+            <div class="stat-item">
+                <span class="stat-label">RSSI</span>
+                <span class="stat-value">{{ dev.rssi }} dBm</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Distância</span>
+                <span class="stat-value">{{ dev.distanceCategory }}</span>
+            </div>
         </div>
       </div>
     }
   `,
   styles: [`
-    .device-info {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .device-info-card {
+      background-color: var(--card-background);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 30px;
+      box-shadow: 0 10px 30px -15px var(--shadow-color);
+      text-align: left;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .device-stats p {
-      margin: 5px 0;
-      font-size: 1.1em;
+
+    .device-info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.15);
+    }
+
+    h2 {
+        margin: 0 0 20px 0;
+        text-align: center;
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .device-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #888;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--secondary-color); /* Cor padronizada */
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush

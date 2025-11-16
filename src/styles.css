@@ -1,20 +1,31 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+:root {
+  --primary-color: #6a11cb;
+  --secondary-color: #2575fc;
+  --danger-color-start: #d53369;
+  --danger-color-end: #daae51;
+  --background-color: #f0f4f8;
+  --text-color: #333;
+  --card-background: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #f0f4f8;
+  background-color: var(--background-color);
+  color: var(--text-color);
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  transition: background-color 0.2s ease-in-out;
 }
 
 body.alert-active {
-  background-color: #ffdddd; /* Um vermelho claro para o fundo */
+  /* A animação de piscar agora será em outro elemento, não no body */
 }
 
 .header-image-container {
@@ -22,6 +33,7 @@ body.alert-active {
     margin-bottom: 20px;
 }
 
+/* Animação de "shake" para o mascote durante o alerta */
 #mascot-image.alert-active {
     animation: shake 0.5s infinite;
 }
