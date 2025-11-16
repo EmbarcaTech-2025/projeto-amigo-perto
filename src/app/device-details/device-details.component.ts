@@ -15,14 +15,13 @@ import { BluetoothService, Device } from '../bluetooth.service';
           <!-- A condição @if usa a propriedade photoUrl, que agora existe -->
           @if(dev.photoUrl) {
             <!-- O [ngSrc] usa a mesma propriedade. Dimensões são obrigatórias -->
-            <img [ngSrc]="dev.photoUrl" alt="Foto do Dispositivo" class="device-photo" width="250" height="250">
+            <img [ngSrc]="dev.photoUrl" alt="" class="device-photo" width="250" height="250">
           }
           <div class="card-header">
             <h2>Detalhes do Dispositivo</h2>
           </div>
           <div class="card-body">
             <p><strong>Nome:</strong> {{ dev.name }}</p>
-            <p><strong>ID:</strong> {{ dev.id }}</p>
             @if(dev.rssi) {
               <p class="rssi"><strong>Força do Sinal (RSSI):</strong> {{ dev.rssi }} dBm</p>
             }
