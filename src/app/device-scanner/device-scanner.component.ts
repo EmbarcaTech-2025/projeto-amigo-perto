@@ -4,72 +4,46 @@ import { BluetoothService } from '../bluetooth.service';
 
 @Component({
   selector: 'app-device-scanner',
+  imports: [CommonModule],
   template: `
-    <div class="scanner-container">
-      <button (click)="scanForDevices()" [disabled]="isScanning()" class="scan-button">
-        @if (isScanning()) {
-          <span class="spinner"></span>
-          Procurando...
-        } @else {
-          Encontrar Dispositivo
-        }
+    <div class="scan-controls">
+      <button (click)="toggleScan()" [class.scanning]="isScanning()">
+        {{ isScanning() ? 'Parar Busca' : 'Procurar Dispositivo' }}
       </button>
-      @if (error()) {
-        <p class="error-message">{{ error() }}</p>
-      }
     </div>
   `,
-  styles: `
-    .scanner-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem;
+  styles: [`
+    .scan-controls {
+      margin-bottom: 20px;
     }
-    .scan-button {
+    button {
       background-color: #007bff;
       color: white;
       border: none;
+      padding: 15px 30px;
+      font-size: 16px;
       border-radius: 5px;
-      padding: 10px 20px;
-      font-size: 1rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
-    .scan-button:disabled {
-      background-color: #a0a0a0;
-      cursor: not-allowed;
+    button:hover {
+      background-color: #0056b3;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-    .spinner {
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      width: 16px;
-      height: 16px;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
+    button.scanning {
+      background-color: #dc3545;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    button.scanning:hover {
+      background-color: #c82333;
     }
-    .error-message {
-      color: #dc3545;
-      margin-top: 1rem;
-    }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule]
+  `],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DeviceScannerComponent {
   private bluetoothService = inject(BluetoothService);
-
   public isScanning = this.bluetoothService.scanning;
-  public error = this.bluetoothService.error;
 
-  scanForDevices(): void {
-    this.bluetoothService.scan();
+  toggleScan(): void {
+    this.bluetoothService.startScan();
   }
 }

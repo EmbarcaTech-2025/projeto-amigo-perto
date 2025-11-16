@@ -10,4 +10,25 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  transition: background-color 0.2s ease-in-out;
 }
+
+body.alert-active {
+  background-color: #ffdddd; /* Um vermelho claro para o fundo */
+}
+
+.header-image-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#mascot-image.alert-active {
+    animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
