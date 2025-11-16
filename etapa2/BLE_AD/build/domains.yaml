@@ -1,0 +1,7 @@
+default: l2_e1_adaptado
+build_dir: C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build
+domains:
+  - name: l2_e1_adaptado
+    build_dir: C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/l2_e1_adaptado
+flash_order:
+  - l2_e1_adaptado

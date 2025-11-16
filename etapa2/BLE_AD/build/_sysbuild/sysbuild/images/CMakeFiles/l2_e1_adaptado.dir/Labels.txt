@@ -1,0 +1,13 @@
+# Target labels
+ l2_e1_adaptado
+# Source files and their labels
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/CMakeFiles/l2_e1_adaptado
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/CMakeFiles/l2_e1_adaptado.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/CMakeFiles/l2_e1_adaptado-complete.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-build.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-configure.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-download.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-install.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-mkdir.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-patch.rule
+C:/Users/erics/OneDrive/Documentos/EMBARCATECH_FASE_3/Projetos/l2_e1_adaptado/build/_sysbuild/sysbuild/images/l2_e1_adaptado-prefix/src/l2_e1_adaptado-stamp/l2_e1_adaptado-update.rule

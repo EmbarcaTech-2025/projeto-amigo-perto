@@ -1,0 +1,31 @@
+/*
+ * Copyright (c) 2021 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+	};
+
+	/* Define um LED customizado conectado em P1.07 */
+	leds {
+		compatible = "gpio-leds";
+		custom_led: led_0 {
+			gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+			label = "Custom LED";
+		};
+	};
+
+	/* Cria um alias para facilitar o acesso */
+	aliases {
+		led0 = &custom_led;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
