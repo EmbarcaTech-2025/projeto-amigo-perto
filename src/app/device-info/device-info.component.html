@@ -1,0 +1,22 @@
+<div class="device-info-card">
+  @if (device(); as dev) {
+    <div class="device-header">
+      <h2 class="device-name">{{ dev.name }}</h2>
+      <p class="device-id">ID: {{ dev.id }}</p>
+    </div>
+    <div class="device-details">
+      <div class="detail-item">
+        <span class="detail-label">RSSI:</span>
+        <span class="detail-value">{{ dev.rssi?.toFixed(2) ?? 'N/A' }} dBm</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Distância:</span>
+        <span class="detail-value">{{ dev.distance?.toFixed(2) ?? 'N/A' }} m</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Categoria:</span>
+        <span class="detail-value">{{ dev.distanceCategory }}</span>
+      </div>
+    </div>
+  }
+</div>

@@ -13,14 +13,14 @@ import { DeviceInfoComponent } from './device-info/device-info.component';
 export class AppComponent {
   public bluetoothService = inject(BluetoothService);
 
-  // Signal de status para geolocalização (mais robusto)
-  public panicStatus = signal<{ message: string; type: 'success' | 'error' } | null>(null);
+  // Signal de status para geolocalização
+  public panicStatus = signal<{ message: string; type: 'info' | 'error' } | null>(null);
 
   /**
-   * Aciona o fluxo do botão de pânico com lógica refatorada.
+   * Aciona o botão de pânico para abrir o Google Maps com a localização atual.
    */
   onPanic(): void {
-    this.panicStatus.set(null);
+    this.panicStatus.set({ message: 'Obtendo sua localização para abrir o mapa...', type: 'info' });
 
     if (!navigator.geolocation) {
       this.panicStatus.set({ message: 'Geolocalização não é suportada por este navegador.', type: 'error' });
@@ -29,8 +29,14 @@ export class AppComponent {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log('Localização obtida:', position.coords);
-        this.simulateEmergencyDispatch(position.coords);
+        const { latitude, longitude } = position.coords;
+        const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        // Abre o Google Maps em uma nova janela/aba.
+        window.open(googleMapsUrl, '_blank');
+
+        // Limpa a mensagem de status após um tempo para uma UI mais limpa
+        setTimeout(() => this.panicStatus.set(null), 5000);
       },
       (error) => {
         let errorMessage = 'Ocorreu um erro ao obter a localização.';
@@ -49,15 +55,5 @@ export class AppComponent {
         this.panicStatus.set({ message: errorMessage, type: 'error' });
       }
     );
-  }
-
-  /**
-   * Simula o envio de um alerta de emergência e atualiza o status.
-   */
-  private simulateEmergencyDispatch(coords: GeolocationCoordinates): void {
-    const message = `ALERTA DE PÂNICO: Localização de emergência enviada. Coordenadas: Latitude ${coords.latitude.toFixed(6)}, Longitude ${coords.longitude.toFixed(6)}`;
-    setTimeout(() => {
-      this.panicStatus.set({ message, type: 'success' });
-    }, 1000); // Simula uma chamada de rede
   }
 }
