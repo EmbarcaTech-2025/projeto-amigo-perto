@@ -1,0 +1,82 @@
+<div class="container">
+  <header 
+    class="status-bar" 
+    [class.out-of-range]="bluetoothService.isOutOfRange()"
+  >
+    @if (bluetoothService.isOutOfRange()) {
+      <span>ALERTA: Dispositivo fora de alcance!</span>
+    } @else {
+      <span>{{ bluetoothService.error() }}</span>
+    }
+  </header>
+
+  <!-- Logo Separado -->
+  <div class="logo-container">
+    <img 
+      ngSrc="assets/amigoperto.png" 
+      alt="Mascote AmigoPerto" 
+      class="logo-image"
+      width="120" 
+      height="120">
+  </div>
+
+  <div class="content">
+    @switch (bluetoothService.operatingMode()) {
+      @case ('idle') {
+        <!-- Botão de Ação Simplificado -->
+        <button class="scan-button action-button" (click)="bluetoothService.startRadarMode()">
+          Procurar Dispositivo
+        </button>
+      }
+      
+      @case ('radar') {
+        @if (bluetoothService.device(); as device) {
+          <app-device-info [device]="device"></app-device-info>
+        }
+
+        <!-- SPINNER DE CARREGAMENTO PARA MODO ALERTA -->
+        @if (bluetoothService.isLoading()) {
+          <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="loading-text">Conectando ao dispositivo...</span>
+          </div>
+        } @else {
+          <button class="control-button alert-mode-button" (click)="bluetoothService.switchToAlertMode()">
+            Ativar Alertas
+          </button>
+        }
+
+        <button class="scan-button disconnect" (click)="bluetoothService.disconnect()">
+          Desconectar
+        </button>
+      }
+
+      @case ('alert') {
+        @if (bluetoothService.device(); as device) {
+          <app-device-info [device]="device"></app-device-info>
+        }
+        <div class="alert-controls">
+          <button (click)="bluetoothService.sendAlert(1)" class="control-button mild-alert">Alerta Suave</button>
+          <button (click)="bluetoothService.sendAlert(2)" class="control-button high-alert">Alerta Forte</button>
+          <button (click)="bluetoothService.sendAlert(0)" class="control-button no-alert">Parar Alerta</button>
+        </div>
+
+        <!-- O botão de pânico original, sem desabilitar -->
+        <button class="panic-button" (click)="onPanic()">
+          PÂNICO
+        </button>
+
+        <!-- Área de Feedback Refatorada -->
+        @if (panicStatus(); as status) {
+          <div class="panic-feedback" [class]="status.type">
+            {{ status.message }}
+          </div>
+        }
+
+        <button class="scan-button disconnect" (click)="bluetoothService.disconnect()">
+          Sair do Modo Alerta
+        </button>
+      }
+    }
+  </div>
+</div>

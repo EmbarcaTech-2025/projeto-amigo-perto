@@ -1,0 +1,27 @@
+<div class="device-card">
+    <div class="device-header">
+        <img src="assets/bluetooth-icon.svg" alt="Bluetooth Icon">
+        <h2>{{ device.name }}</h2>
+        <!-- A linha que exibia o ID foi removida -->
+    </div>
+    <div class="device-details">
+        @if(device.rssi !== undefined) {
+            <div class="detail-item">
+                <span>Força do Sinal (RSSI)</span>
+                <strong>{{ device.rssi }} dBm</strong>
+            </div>
+        }
+        @if(device.distance !== undefined) {
+            <div class="detail-item">
+                <span>Distância Estimada</span>
+                <strong>{{ device.distance }} m</strong>
+            </div>
+        }
+        @if(device.distanceCategory) {
+             <div class="detail-item">
+                <span>Proximidade</span>
+                <strong>{{ device.distanceCategory }}</strong>
+            </div>
+        }
+    </div>
+</div>

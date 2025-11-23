@@ -1,0 +1,254 @@
+/* Estilos Globais */
+:host {
+    display: block;
+    font-family: 'Roboto', sans-serif;
+    --background-start: #2a2a2e;
+    --background-end: #1e1e22;
+    --card-background: #343438;
+    --primary-color-start: #00f2fe;
+    --primary-color-end: #4facfe;
+    --text-color: #f0f0f0;
+    --text-color-dark: #a0a0a0;
+    --shadow-color: rgba(0, 242, 254, 0.2);
+    --danger-color-start: #ff8a00;
+    --danger-color-end: #e52e71;
+    --panic-start: #ff416c;
+    --panic-end: #ff4b2b;
+    --success-color: #28a745;
+    --mild-alert-start: #f8cdda;
+    --mild-alert-end: #1d2b64;
+    --high-alert-start: #fbd786;
+    --high-alert-end: #f7797d;
+    --disconnect-start: #6c757d;
+    --disconnect-end: #343a40;
+    --alert-mode-start: #89f7fe;
+    --alert-mode-end: #66a6ff;
+    --feedback-bg: #4a4a50;
+}
+
+/* --- ANIMAÇÕES --- */
+@keyframes pulse-red {
+    0% { background-color: #7d0c25; box-shadow: 0 0 5px #ff557d, 0 0 10px #ff557d inset; }
+    50% { background-color: #e52e71; box-shadow: 0 0 15px #ff88ad, 0 0 15px #ff88ad inset; }
+    100% { background-color: #7d0c25; box-shadow: 0 0 5px #ff557d, 0 0 10px #ff557d inset; }
+}
+
+@keyframes pulse-panic {
+    0% { transform: scale(1); box-shadow: 0 0 15px var(--panic-start); }
+    50% { transform: scale(1.03); box-shadow: 0 0 25px var(--panic-end); }
+    100% { transform: scale(1); box-shadow: 0 0 15px var(--panic-start); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- LAYOUT PRINCIPAL --- */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; 
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--background-start), var(--background-end));
+    padding: 20px;
+    padding-top: 40px; 
+    box-sizing: border-box;
+}
+
+.logo-container {
+    margin-bottom: 40px;
+}
+
+.logo-image {
+    border-radius: 50%;
+    border: 4px solid var(--primary-color-start);
+    box-shadow: 0 0 25px var(--shadow-color);
+    object-fit: cover;
+}
+
+.status-bar {
+    width: 100%;
+    max-width: 500px;
+    background-color: var(--card-background);
+    color: var(--text-color-dark);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 30px; 
+    text-align: center;
+    font-size: 0.9em;
+    min-height: 1.2em;
+    transition: all 0.3s ease;
+}
+
+.status-bar.out-of-range {
+    color: white;
+    font-weight: bold;
+    animation: pulse-red 2s infinite;
+}
+
+.content {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; 
+}
+
+/* --- SPINNER DE CARREGAMENTO --- */
+.spinner-container {
+    display: flex;
+    flex-direction: column; /* Para empilhar spinner e texto */
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Espaço entre spinner e texto */
+    padding: 20px;
+    min-height: 95px; /* Altura para evitar pulo de layout */
+}
+
+.spinner {
+    border: 5px solid var(--card-background);
+    border-top: 5px solid var(--primary-color-end);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: var(--text-color-dark);
+    font-size: 1em;
+}
+
+/* --- BOTÕES --- */
+.panic-button {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    outline: none;
+    background: linear-gradient(145deg, var(--panic-start), var(--panic-end));
+    animation: pulse-panic 2.5s infinite;
+    transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.panic-button:disabled {
+    background: var(--disconnect-start);
+    cursor: not-allowed;
+    animation: none;
+    opacity: 0.7;
+}
+
+.panic-button:active {
+    transform: scale(0.98);
+    animation: none; 
+}
+
+.scan-button {
+    border: none;
+    cursor: pointer;
+    outline: none;
+    background: none;
+    padding: 0;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+}
+
+.action-button {
+    background: linear-gradient(145deg, var(--primary-color-start), var(--primary-color-end));
+    box-shadow: 0 8px 25px var(--shadow-color);
+    padding: 18px 40px;
+}
+
+.action-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px var(--shadow-color);
+}
+
+.scan-button.disconnect {
+    background: linear-gradient(145deg, var(--disconnect-start), var(--disconnect-end));
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    padding: 15px 30px;
+    width: auto;
+    height: auto;
+}
+
+.scan-button.disconnect:hover {
+    transform: translateY(-2px);
+}
+
+.alert-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.control-button {
+    flex-grow: 1;
+    padding: 12px 10px;
+    font-size: 1em;
+    font-weight: 500;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.control-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.mild-alert { background: linear-gradient(145deg, var(--mild-alert-start), var(--mild-alert-end)); }
+.high-alert { background: linear-gradient(145deg, var(--high-alert-start), var(--high-alert-end)); }
+.no-alert { background: linear-gradient(145deg, var(--disconnect-start), var(--disconnect-end)); }
+
+.alert-mode-button {
+    background: linear-gradient(145deg, var(--alert-mode-start), var(--alert-mode-end));
+    color: #1a1a1e;
+    width: 100%;
+    padding: 15px 30px; 
+    font-size: 1.2em;
+    border-radius: 15px;
+    min-height: 95px; /* Altura para evitar pulo de layout */
+    box-sizing: border-box;
+}
+
+/* --- FEEDBACK --- */
+.panic-feedback {
+    width: 100%;
+    background-color: var(--feedback-bg);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.95em;
+    line-height: 1.4;
+    border-left: 5px solid; 
+}
+
+.panic-feedback.success {
+    border-left-color: var(--success-color);
+}
+
+.panic-feedback.error {
+    border-left-color: var(--panic-end);
+}

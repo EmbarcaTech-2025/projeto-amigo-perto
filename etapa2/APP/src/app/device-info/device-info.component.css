@@ -1,0 +1,54 @@
+/* Estilos para o card de informações do dispositivo */
+.device-info-card {
+  background-color: #f0f0f0; /* Cor de fundo mais clara */
+  color: #333; /* Texto mais escuro para contraste */
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.device-header {
+  border-bottom: 1px solid #ddd; /* Linha divisória mais sutil */
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.device-name {
+  font-size: 1.25rem; /* Tamanho da fonte um pouco menor */
+  margin: 0;
+  font-weight: bold;
+}
+
+.device-id {
+  font-size: 0.8rem;
+  color: #666; /* Cor do ID mais suave */
+  margin-top: 4px;
+}
+
+.device-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Layout responsivo */
+  gap: 12px;
+}
+
+.detail-item {
+  background-color: #fff; /* Fundo branco para os detalhes */
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #eee; /* Borda leve */
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #007bff; /* Cor de destaque para o valor */
+}
