@@ -33,9 +33,19 @@
         @if (bluetoothService.device(); as device) {
           <app-device-info [device]="device"></app-device-info>
         }
-        <button class="control-button alert-mode-button" (click)="bluetoothService.switchToAlertMode()">
-          Ativar Alertas
-        </button>
+
+        <!-- SPINNER DE CARREGAMENTO PARA MODO ALERTA -->
+        @if (bluetoothService.isLoading()) {
+          <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="loading-text">Conectando ao dispositivo...</span>
+          </div>
+        } @else {
+          <button class="control-button alert-mode-button" (click)="bluetoothService.switchToAlertMode()">
+            Ativar Alertas
+          </button>
+        }
+
         <button class="scan-button disconnect" (click)="bluetoothService.disconnect()">
           Desconectar
         </button>
@@ -51,6 +61,7 @@
           <button (click)="bluetoothService.sendAlert(0)" class="control-button no-alert">Parar Alerta</button>
         </div>
 
+        <!-- O botão de pânico original, sem desabilitar -->
         <button class="panic-button" (click)="onPanic()">
           PÂNICO
         </button>

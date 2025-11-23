@@ -54,7 +54,7 @@ const ALERT_LEVEL_CHARACTERISTIC_UUID = '00002a06-0000-1000-8000-00805f9b34fb';
 // --- Constantes de Calibração de Distância (RSSI) ---
 const MEASURED_POWER_AT_1M = -52; // Potência do sinal (em dBm) medida a 1 metro de distância.
 const ENVIRONMENTAL_FACTOR = 4;   // Fator ambiental. Varia de 2 (espaço aberto) a 4 (ambientes internos com paredes).
-const RSSI_OUT_OF_RANGE_THRESHOLD = -90; // Limite de RSSI para considerar "fora de alcance".
+const RSSI_OUT_OF_RANGE_THRESHOLD = -100; // Limite de RSSI para considerar "fora de alcance".
 
 
 export type OperatingMode = 'idle' | 'radar' | 'alert';
@@ -75,6 +75,7 @@ export class BluetoothService {
   operatingMode = signal<OperatingMode>('idle');
   error = signal<string | null>('Pronto para iniciar. Clique para procurar um dispositivo.');
   isOutOfRange = signal<boolean>(false);
+  isLoading = signal<boolean>(false); // Signal para o estado de carregamento
 
   // --- Ações Públicas ---
 
@@ -122,6 +123,7 @@ export class BluetoothService {
   async switchToAlertMode(): Promise<void> {
     if (this.operatingMode() !== 'radar' || !this.bluetoothDevice) return;
 
+    this.isLoading.set(true); // Inicia o carregamento
     this.stopWatchingAdvertisements();
     this.error.set('Mudando para Modo Alerta... Conectando...');
 
@@ -137,6 +139,8 @@ export class BluetoothService {
     } catch (error: any) {
       this.error.set(`Falha ao conectar: ${error.message}`);
       this.startRadarModeAfterFailure();
+    } finally {
+      this.isLoading.set(false); // Finaliza o carregamento (sucesso ou falha)
     }
   }
 
