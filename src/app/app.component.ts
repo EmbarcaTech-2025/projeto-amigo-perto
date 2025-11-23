@@ -1,84 +1,63 @@
-import { ChangeDetectionStrategy, Component, effect, inject, Renderer2, OnDestroy } from '@angular/core';
-import { HeaderComponent } from './header/header.component';
-import { DeviceScannerComponent } from './device-scanner/device-scanner.component';
-import { DeviceDetailsComponent } from './device-details/device-details.component';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { BluetoothService } from './bluetooth.service';
-import { CommonModule } from '@angular/common';
+import { DeviceInfoComponent } from './device-info/device-info.component';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <app-header />
-    <main>
-      <app-device-scanner />
-      @if (bluetoothService.error(); as errorMessage) {
-        <div class="status-container">{{ errorMessage }}</div>
-      }
-      <app-device-details [device]="bluetoothService.device()" />
-    </main>
-  `,
-  styles: [`
-    main {
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .status-container {
-      margin: 20px 0;
-      font-style: italic;
-      color: #555;
-    }
-  `],
-  imports: [CommonModule, HeaderComponent, DeviceScannerComponent, DeviceDetailsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+  imports: [CommonModule, DeviceInfoComponent, NgOptimizedImage],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   public bluetoothService = inject(BluetoothService);
-  private renderer = inject(Renderer2);
 
-  private alertInterval: any;
-  private isAlerting = false; // Novo estado para controlar o ciclo de alerta
+  // Signal de status para geolocalização (mais robusto)
+  public panicStatus = signal<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  constructor() {
-    // O effect agora só dispara o alerta, mas não o cancela.
-    effect(() => {
-      if (this.bluetoothService.isOutOfRange() && !this.isAlerting) {
-        this.triggerAlert();
-      }
-    });
-  }
+  /**
+   * Aciona o fluxo do botão de pânico com lógica refatorada.
+   */
+  onPanic(): void {
+    this.panicStatus.set(null);
 
-  triggerAlert() {
-    if (this.isAlerting) return; // Se já está alertando, não faz nada
-
-    this.isAlerting = true; // Trava o estado de alerta
-    let alertCount = 0;
-
-    this.alertInterval = setInterval(() => {
-      if (alertCount < 5) {
-        this.renderer.addClass(document.body, 'alert-active');
-        this.bluetoothService.beep();
-        setTimeout(() => {
-          this.renderer.removeClass(document.body, 'alert-active');
-        }, 250); // Duração do pisca-pisca visual
-        alertCount++;
-      } else {
-        // Ciclo de 5 alertas concluído. Limpa o intervalo e destrava o estado.
-        if (this.alertInterval) {
-          clearInterval(this.alertInterval);
-          this.alertInterval = null;
-        }
-        this.isAlerting = false; // Libera para um novo ciclo de alerta, se necessário
-      }
-    }, 500); // Intervalo entre os beeps/piscadas
-  }
-
-  ngOnDestroy(): void {
-    // Garante que o intervalo seja limpo se o componente for destruído
-    if (this.alertInterval) {
-      clearInterval(this.alertInterval);
+    if (!navigator.geolocation) {
+      this.panicStatus.set({ message: 'Geolocalização não é suportada por este navegador.', type: 'error' });
+      return;
     }
-    this.renderer.removeClass(document.body, 'alert-active');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log('Localização obtida:', position.coords);
+        this.simulateEmergencyDispatch(position.coords);
+      },
+      (error) => {
+        let errorMessage = 'Ocorreu um erro ao obter a localização.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permissão para acessar a localização foi negada.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Informações de localização não estão disponíveis.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'A solicitação para obter a localização expirou.';
+            break;
+        }
+        console.error(errorMessage, error);
+        this.panicStatus.set({ message: errorMessage, type: 'error' });
+      }
+    );
+  }
+
+  /**
+   * Simula o envio de um alerta de emergência e atualiza o status.
+   */
+  private simulateEmergencyDispatch(coords: GeolocationCoordinates): void {
+    const message = `ALERTA DE PÂNICO: Localização de emergência enviada. Coordenadas: Latitude ${coords.latitude.toFixed(6)}, Longitude ${coords.longitude.toFixed(6)}`;
+    setTimeout(() => {
+      this.panicStatus.set({ message, type: 'success' });
+    }, 1000); // Simula uma chamada de rede
   }
 }
