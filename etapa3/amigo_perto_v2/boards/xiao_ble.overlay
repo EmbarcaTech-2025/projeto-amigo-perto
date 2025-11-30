@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2024 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	aliases {
+		pwm-led0 = &pwm_led0;
+		ledverde = &led_verde;
+		ledazul = &led_azul;
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		pwm_led0: pwm_led_0 {
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+			label = "PWM LED Red";
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led_verde: led_verde {
+			gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
+			label = "LED Verde";
+		};
+		led_azul: led_azul {
+			gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
+			label = "LED Azul";
+		};
+	};
+
+	/* Configuração para leitura de bateria via ADC */
+	zephyr,user {
+		io-channels = <&adc 0>;
+	};
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pinctrl {
+	pwm0_default: pwm0_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 28)>;
+			//nordic,invert;
+		};
+	};
+
+	pwm0_sleep: pwm0_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 28)>;
+			low-power-enable;
+		};
+	};
+};
+
+/* Habilita ADC para leitura de bateria */
+&adc {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_1_6";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
+		zephyr,input-positive = <NRF_SAADC_VDD>;
+		zephyr,resolution = <12>;
+	};
+};
