@@ -47,6 +47,7 @@ Camadas de software utilizadas:
 - Buzzer piezoelétrico
 - Bateria Li-Po
 - LEDs de status
+- 
 ┌─────────────────────────────────────┐
 │         Aplicação (main.c)          │
 │  - Loop principal                   │
@@ -67,6 +68,7 @@ Camadas de software utilizadas:
 │  - Drivers (PWM, ADC, GPIO)         │
 │  - Power management                 │
 └─────────────────────────────────────┘
+
 
 ## Estrutura de Diretórios
 
