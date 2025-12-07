@@ -47,7 +47,8 @@ Camadas de software utilizadas:
 - Buzzer piezoelétrico
 - Bateria Li-Po
 - LEDs de status
-- 
+
+```
 ┌─────────────────────────────────────┐
 │         Aplicação (main.c)          │
 │  - Loop principal                   │
@@ -68,7 +69,7 @@ Camadas de software utilizadas:
 │  - Drivers (PWM, ADC, GPIO)         │
 │  - Power management                 │
 └─────────────────────────────────────┘
-
+```
 
 ## Estrutura de Diretórios
 
@@ -105,6 +106,7 @@ amigo_perto_v2/
 ## Integração com o Aplicativo
 
 Arquitetura do Sistema
+```
 ┌──────────────┐         BLE          ┌──────────────┐
 │  Smartphone  │◄────────────────────►│   Coleira    │
 │              │   RSSI (lido pelo    │  (Firmware)  │
@@ -116,6 +118,7 @@ Arquitetura do Sistema
 │  - Monitora  │                      │  - Reporta   │
 │    bateria   │◄─────────────────────┤    bateria   │
 └──────────────┘   Status (battery)   └──────────────┘
+```
 
 ## Fluxo de Operação
 
