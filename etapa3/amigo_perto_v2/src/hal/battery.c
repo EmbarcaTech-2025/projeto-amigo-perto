@@ -1,80 +1,92 @@
 /*
  * HAL Battery - Hardware Abstraction Layer para monitoramento de bateria
- * 
- * @file battery.c
- * @brief Implementação do HAL Battery
- * Localização: src/hal/battery.c
- * Header público: include/hal/battery.h
- * 
- * Este módulo implementa o monitoramento de bateria através de ADC para
- * leitura de tensão e gerenciamento de estados de carga.
- * 
- * Características:
- * - Leitura via ADC com oversampling para maior precisão
- * - Otimizado para bateria tipo moeda CR2032 (3.0V nominal, 2.0V mínimo)
- * - Baixo consumo: ADC ativado apenas durante leitura
- * - Suporte a divider resistivo para leitura de tensão
- * - Interpolação linear por segmentos para cálculo de percentual
- * 
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Implementação simplificada para leitura do percentual de carga da bateria LiPo 1S.
+ * Usa o canal interno SAADC_VDD do nRF52840 para medir a tensão de alimentação.
  */
 
 #include "hal/battery.h"
-
-// Zephyr includes
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/adc.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>
 
-// Registra módulo de logging
 LOG_MODULE_REGISTER(hal_battery, LOG_LEVEL_DBG);
 
-/*******************************************************************************
- * CONFIGURAÇÕES E CONSTANTES
- ******************************************************************************/
+// === CONFIGURAÇÕES DO XIAO nRF52840 ===
 
-// Configuração do ADC a partir do devicetree
-#if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
-    !DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
-#warning "ADC não configurado no devicetree, usando configuração padrão"
+// Pino P0.14 - READ_BAT / VBAT_ENABLE
+// Deve ser LOW para habilitar o divisor de tensão da bateria
+#define VBAT_ENABLE_PIN  14
+#define VBAT_ENABLE_PORT DT_NODELABEL(gpio0)
+
+// Pino P0.31 - PIN_VBAT (AIN7)
+// Lê a tensão da bateria através do divisor resistivo R1=1MΩ, R2=510kΩ
+#define VBAT_ADC_AIN     7
+
+// === CONFIGURAÇÕES DO ADC ===
+
+// Configuração do ADC para XIAO nRF52840
+// Canal 7 = AIN7 = P0.31 = VBAT (através do divisor resistivo)
 #define ADC_NODE DT_NODELABEL(adc)
-#define ADC_CHANNEL 0
-#define ADC_RESOLUTION 12
-#else
-#define ADC_NODE DT_IO_CHANNELS_CTLR(DT_PATH(zephyr_user))
-#define ADC_CHANNEL DT_IO_CHANNELS_INPUT(DT_PATH(zephyr_user))
-#define ADC_RESOLUTION 12
-#endif
+#define ADC_CHANNEL 7
 
-// Referência de tensão do ADC (nRF52840: 0.6V com ganho 1/6 = 3.6V range)
-#define ADC_VREF_MV         3600   /**< Tensão de referência em mV */
+// Resolução do ADC (12 bits = 0-4095)
+#define ADC_RESOLUTION 12
+
+// Referência de tensão: nRF52840 usa 0.6V interna
+// Com ganho 1/6, o range efetivo é 0-3.6V
+// Divisor resistivo: R1≈1037Ω (VBAT) + R2=510kΩ (P0.14)
+// V_adc = V_bat × (R2 / (R1 + R2)) = V_bat × (510k / 1547k) = V_bat × 0.3297
+// Multiplicador: 1 / 0.3297 = 3.03 (usando 1547/510 para precisão - valor calibrado)
+#define ADC_VREF_MV         600     // Referência interna 0.6V
+#define ADC_GAIN_DIVISOR    6       // Ganho 1/6 = divisor 6
+#define VBAT_DIVIDER_NUM    1547    // Numerador: R1 + R2 = 1037k + 510k (calibrado)
+#define VBAT_DIVIDER_DEN    510     // Denominador: R2 = 510k
 #define ADC_GAIN            ADC_GAIN_1_6
 #define ADC_REFERENCE       ADC_REF_INTERNAL
 #define ADC_ACQUISITION_TIME ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)
 
-// Número de leituras para média
-#define ADC_SAMPLES         4
+// Número de amostras para oversampling (maior precisão, menos ruído)
+#define ADC_SAMPLES 4
 
-// Características da bateria CR2032
-#define BATTERY_VOLTAGE_MAX_MV   3000   /**< 3.0V - tensão máxima (100%) */
-#define BATTERY_VOLTAGE_GOOD_MV  2800   /**< 2.8V - bom (70%) */
-#define BATTERY_VOLTAGE_LOW_MV   2500   /**< 2.5V - baixo (30%) */
-#define BATTERY_VOLTAGE_CRIT_MV  2200   /**< 2.2V - crítico (10%) */
-#define BATTERY_VOLTAGE_MIN_MV   2000   /**< 2.0V - mínimo (0%) */
+// === CARACTERÍSTICAS DA BATERIA LIPO 1S ===
 
-// Divisor resistivo (se aplicável)
-// Se houver divisor resistivo R1/(R1+R2), ajustar:
-// Exemplo: R1=1M, R2=1M -> DIVIDER_RATIO = 2.0
-#define BATTERY_DIVIDER_RATIO    1.0f   /**< Razão do divisor (1.0 = sem divisor) */
+// Tabela de conversão tensão -> percentual (curva de descarga LiPo 1S)
+// Baseado em medições reais de bateria LiPo típica
+typedef struct {
+	uint16_t voltage_mv;
+	uint8_t percentage;
+} battery_state_t;
 
-/*******************************************************************************
- * VARIÁVEIS PRIVADAS
- ******************************************************************************/
+#define BATTERY_STATES_COUNT 11
+static const battery_state_t battery_states[BATTERY_STATES_COUNT] = {
+	{4200, 100}, // Totalmente carregada
+	{4110, 90},
+	{4020, 80},
+	{3930, 70},
+	{3840, 60},
+	{3750, 50},
+	{3660, 40},
+	{3570, 30},
+	{3480, 20},
+	{3390, 10},
+	{3300, 0}    // Tensão mínima segura
+};
+
+// === VARIÁVEIS PRIVADAS ===
 
 // Device handle do ADC
 static const struct device *adc_dev;
+
+// Device handle do GPIO (para controle do VBAT_ENABLE)
+static const struct device *gpio_dev;
+
+// Flag de inicialização
+static bool initialized = false;
 
 // Configuração do canal ADC
 static struct adc_channel_cfg channel_cfg = {
@@ -83,137 +95,204 @@ static struct adc_channel_cfg channel_cfg = {
 	.acquisition_time = ADC_ACQUISITION_TIME,
 	.channel_id = ADC_CHANNEL,
 #ifdef CONFIG_ADC_NRFX_SAADC
-	.input_positive = SAADC_CH_PSELP_PSELP_VDD,  // VDD para nRF52
+	.input_positive = SAADC_CH_PSELP_PSELP_AnalogInput0 + VBAT_ADC_AIN,  // AIN7 = P0.31 (VBAT)
 #endif
 };
 
-// Sequence de leitura
+// Configuração da sequência de leitura
 static struct adc_sequence sequence = {
 	.channels = BIT(ADC_CHANNEL),
 	.resolution = ADC_RESOLUTION,
 };
 
-// Buffer para leitura
+// Buffer para armazenar amostras do ADC
 static int16_t adc_sample_buffer[ADC_SAMPLES];
 
-// Estado do módulo
-static bool initialized = false;
-static hal_battery_info_t last_reading = {
-	.voltage_mv = 0,
-	.percentage = 0,
-	.state = HAL_BATTERY_STATE_UNKNOWN,
-};
-
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - ADC
- ******************************************************************************/
+// === FUNÇÕES AUXILIARES PRIVADAS ===
 
 /**
- * @brief Converte valor ADC raw para milivolts
+ * Converte valor bruto do ADC para tensão em milivolts
  * 
- * @param adc_value Valor raw do ADC
- * @return Tensão em milivolts
+ * Usa a API do Zephyr adc_raw_to_millivolts() que já considera:
+ * - Resolução do ADC (12 bits)
+ * - Ganho configurado (1/6)
+ * - Referência de tensão (0.6V)
+ * - Saturação e faixa interna
+ * 
+ * Depois compensa o divisor resistivo R1≈1037Ω, R2=510kΩ:
+ * V_bateria = V_adc_pin × (R1 + R2) / R2 = V_adc_pin × 1547 / 510 ≈ V_adc_pin × 3.03
  */
-static uint16_t adc_raw_to_mv(int16_t adc_value)
-{
-	// Conversão: (adc_value / adc_max) * vref * divider_ratio
-	uint32_t adc_max = (1 << ADC_RESOLUTION) - 1;
-	uint32_t voltage_mv = ((uint32_t)adc_value * ADC_VREF_MV) / adc_max;
+static inline uint16_t adc_raw_to_mv(int16_t adc_value) {
+	// Converte usando API do Zephyr (já aplica ganho, referência e resolução)
+	int32_t adc_mv = adc_value;
+	adc_raw_to_millivolts(ADC_VREF_MV, ADC_GAIN, ADC_RESOLUTION, &adc_mv);
 	
-	// Aplica razão do divisor resistivo
-	voltage_mv = (uint32_t)((float)voltage_mv * BATTERY_DIVIDER_RATIO);
+	// Compensa divisor resistivo: V_bat = V_pin × (R1+R2)/R2 = V_pin × 1547/510
+	uint16_t voltage_bat = (uint16_t)((adc_mv * VBAT_DIVIDER_NUM) / VBAT_DIVIDER_DEN);
 	
-	return (uint16_t)voltage_mv;
+	LOG_DBG("ADC raw=%d -> PIN=%dmV -> BAT=%dmV", adc_value, (int)adc_mv, voltage_bat);
+	return voltage_bat;
 }
 
 /**
- * @brief Realiza leitura do ADC com oversampling
+ * Realiza leitura do ADC com oversampling
  * 
- * @param voltage_mv Ponteiro para armazenar tensão lida
- * @return 0 em sucesso, < 0 em erro
+ * Faz múltiplas leituras e calcula a média para reduzir ruído e aumentar precisão.
+ * Ignora amostras inválidas (negativas ou saturadas).
  */
-static int adc_read_with_oversampling(uint16_t *voltage_mv)
+static int adc_read_with_oversampling(uint16_t *voltage_mv) 
 {
-	int ret;
 	int32_t sum = 0;
 	uint8_t valid_samples = 0;
 	
-	// Configura buffer no sequence
+	// Habilita circuito de leitura da bateria (ativa o divisor resistivo)
+	// Como configuramos GPIO_ACTIVE_LOW, gpio_pin_set(1) = LOW físico = habilita
+	gpio_pin_set(gpio_dev, VBAT_ENABLE_PIN, 1);
+	
+	// Aguarda estabilização do circuito
+	k_msleep(5);
+	
+	// Configura buffer para receber amostras
 	sequence.buffer = adc_sample_buffer;
 	sequence.buffer_size = sizeof(adc_sample_buffer);
 	
 	// Realiza múltiplas leituras
 	for (int i = 0; i < ADC_SAMPLES; i++) 
 	{
-		ret = adc_read(adc_dev, &sequence);
+		int ret = adc_read(adc_dev, &sequence);
 		if (ret < 0) 
 		{
 			LOG_ERR("Erro na leitura ADC: %d", ret);
 			continue;
 		}
 		
+		// Lê a primeira amostra do buffer (uma leitura por vez)
 		int16_t raw_value = adc_sample_buffer[0];
 		
-		// Valida leitura (ignora valores negativos ou saturados)
+		// Valida amostra (ignora valores anormais)
 		if (raw_value >= 0 && raw_value < (1 << ADC_RESOLUTION)) 
 		{
 			sum += raw_value;
 			valid_samples++;
+			LOG_DBG("Amostra %d: raw=%d", i+1, raw_value);
 		}
 		
-		// Pequeno delay entre leituras
+		// Pequeno delay entre amostras
 		k_msleep(1);
 	}
 	
+	// Verifica se obtivemos amostras válidas
 	if (valid_samples == 0) 
 	{
 		LOG_ERR("Nenhuma leitura ADC válida");
 		return -EIO;
 	}
 	
-	// Calcula média
+	// Calcula média e converte para mV
 	int16_t avg_raw = sum / valid_samples;
 	*voltage_mv = adc_raw_to_mv(avg_raw);
 	
-	LOG_DBG("ADC raw avg: %d, voltage: %d mV (%d samples)", 
-	        avg_raw, *voltage_mv, valid_samples);
+	// Desabilita circuito de leitura para economia de corrente
+	// Como configuramos GPIO_ACTIVE_LOW, gpio_pin_set(0) = HIGH físico = desabilita
+	gpio_pin_set(gpio_dev, VBAT_ENABLE_PIN, 0);
+	
+	LOG_DBG("ADC: raw=%d, voltage=%d mV (%d amostras)", avg_raw, *voltage_mv, valid_samples);
 	
 	return 0;
 }
 
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - CÁLCULOS
- ******************************************************************************/
-
 /**
- * @brief Interpola linearmente entre dois pontos
+ * Converte tensão em mV para percentual de carga (0-100%)
  * 
- * @param x Valor de entrada
- * @param x0 Ponto inicial X
- * @param y0 Ponto inicial Y
- * @param x1 Ponto final X
- * @param y1 Ponto final Y
- * @return Valor interpolado Y
+ * Usa interpolação linear entre pontos da tabela de estados da bateria.
+ * A tabela possui 11 pontos que descrevem a curva de descarga real da LiPo 1S.
+ * 
+ * Algoritmo:
+ * 1. Verifica limites (>= 4200mV = 100%, <= 3300mV = 0%)
+ * 2. Encontra dois pontos adjacentes que englobam a tensão medida
+ * 3. Interpola linearmente: % = %low + (V - Vlow) × (%high - %low) / (Vhigh - Vlow)
  */
-static int32_t linear_interpolate(int32_t x, int32_t x0, int32_t y0, 
-                                   int32_t x1, int32_t y1)
+static uint8_t voltage_to_percentage(uint16_t voltage_mv) 
 {
-	if (x <= x0) return y0;
-	if (x >= x1) return y1;
+	// Verifica limites superior e inferior
+	if (voltage_mv >= battery_states[0].voltage_mv) 
+	{
+		return 100;
+	}
+
+	if (voltage_mv <= battery_states[BATTERY_STATES_COUNT - 1].voltage_mv) 
+	{
+		return 0;
+	}
 	
-	return y0 + ((x - x0) * (y1 - y0)) / (x1 - x0);
+	// Procura os dois pontos entre os quais a tensão se encontra
+	for (uint8_t i = 0; i < BATTERY_STATES_COUNT - 1; i++) 
+	{
+		uint16_t voltage_high = battery_states[i].voltage_mv;
+		uint16_t voltage_low = battery_states[i + 1].voltage_mv;
+		
+		// Encontrou o intervalo correto
+		if (voltage_mv <= voltage_high && voltage_mv >= voltage_low) 
+		{
+			uint8_t percentage_high = battery_states[i].percentage;
+			uint8_t percentage_low = battery_states[i + 1].percentage;
+			
+			int32_t voltage_range = voltage_high - voltage_low;
+			int32_t percentage_range = percentage_high - percentage_low;
+			int32_t voltage_diff = voltage_mv - voltage_low;
+			
+			// Proteção contra divisão por zero (improvável, mas seguro)
+			if (voltage_range == 0) {
+				return percentage_high;
+			}
+			
+			// Interpolação linear
+			uint8_t percentage = percentage_low + 
+			                     (voltage_diff * percentage_range) / voltage_range;
+			
+			LOG_DBG("Interpolação: %dmV entre [%d,%d]mV -> %d%% entre [%d,%d]%%",
+			        voltage_mv, voltage_low, voltage_high,
+			        percentage, percentage_low, percentage_high);
+			
+			return percentage;
+		}
+	}
+	
+	// Não deveria chegar aqui (segurança)
+	LOG_WRN("Tensão %dmV fora da tabela de estados", voltage_mv);
+	return 0;
 }
 
-/*******************************************************************************
- * API PÚBLICA
- ******************************************************************************/
+// === API PÚBLICA ===
 
-int hal_battery_init(void)
+/**
+ * Inicializa o módulo de monitoramento de bateria
+ */
+int hal_battery_init(void) 
 {
+	// Previne reinicialização
 	if (initialized) 
 	{
 		LOG_WRN("HAL Battery já inicializado");
 		return HAL_BATTERY_SUCCESS;
+	}
+	
+	// Obtém device do GPIO para controle do VBAT_ENABLE
+	gpio_dev = DEVICE_DT_GET(VBAT_ENABLE_PORT);
+	if (!device_is_ready(gpio_dev)) 
+	{
+		LOG_ERR("GPIO device não está pronto");
+		return HAL_BATTERY_ERROR_INIT;
+	}
+	
+	// Configura P0.14 como saída ACTIVE_LOW (0=habilita divisor, 1=desabilita)
+	// Inicialmente em estado inativo (HIGH lógico = LOW físico = desabilitado)
+	int ret = gpio_pin_configure(gpio_dev, VBAT_ENABLE_PIN, 
+	                             GPIO_OUTPUT_INACTIVE | GPIO_ACTIVE_LOW);
+	if (ret < 0) 
+	{
+		LOG_ERR("Falha ao configurar pino VBAT_ENABLE: %d", ret);
+		return HAL_BATTERY_ERROR_INIT;
 	}
 	
 	// Obtém device do ADC
@@ -225,8 +304,7 @@ int hal_battery_init(void)
 	}
 	
 	// Configura canal ADC
-	int ret = adc_channel_setup(adc_dev, &channel_cfg);
-
+	ret = adc_channel_setup(adc_dev, &channel_cfg);
 	if (ret < 0) 
 	{
 		LOG_ERR("Falha ao configurar canal ADC: %d", ret);
@@ -235,178 +313,70 @@ int hal_battery_init(void)
 	
 	initialized = true;
 	
-	// Realiza primeira leitura
-	hal_battery_info_t info;
-	ret = hal_battery_get_info(&info);
-	if (ret == HAL_BATTERY_SUCCESS) 
-	{
-		LOG_INF("HAL Battery inicializado: %d mV (%d%%, estado: %d)",
-		        info.voltage_mv, info.percentage, info.state);
-	} 
-	else 
-	{
-		LOG_WRN("HAL Battery inicializado, mas leitura inicial falhou");
-	}
+	// Faz leitura inicial para validar
+	uint8_t initial_level = hal_battery_get_percentage();
+	LOG_INF("HAL Battery inicializado - Nível: %d%%", initial_level);
 	
 	return HAL_BATTERY_SUCCESS;
 }
 
-int hal_battery_read_voltage(uint16_t *voltage_mv)
+/**
+ * Lê o percentual de carga da bateria
+ */
+uint8_t hal_battery_get_percentage(void) 
 {
+	// Verifica se foi inicializado
 	if (!initialized) 
 	{
 		LOG_ERR("HAL Battery não inicializado");
-		return HAL_BATTERY_ERROR_STATE;
+		return 0;
 	}
 	
-	if (voltage_mv == NULL)
+	// Lê tensão com oversampling
+	uint16_t voltage_mv;
+	int ret = adc_read_with_oversampling(&voltage_mv);
+	if (ret < 0) 
 	{
-		LOG_ERR("Ponteiro voltage_mv é NULL");
+		LOG_ERR("Erro ao ler tensão da bateria");
+		return 0;
+	}
+	
+	// Converte para percentual
+	uint8_t percentage = voltage_to_percentage(voltage_mv);
+	
+	LOG_DBG("Bateria: %d mV = %d%%", voltage_mv, percentage);
+	
+	return percentage;
+}
+
+/**
+ * Lê a tensão da bateria em milivolts
+ */
+int hal_battery_get_millivolt(uint16_t *battery_millivolt) 
+{
+	// Verifica se foi inicializado
+	if (!initialized) 
+	{
+		LOG_ERR("HAL Battery não inicializado");
+		return HAL_BATTERY_ERROR_INIT;
+	}
+	
+	// Valida ponteiro
+	if (battery_millivolt == NULL) 
+	{
+		LOG_ERR("Ponteiro nulo fornecido");
 		return HAL_BATTERY_ERROR_READ;
 	}
 	
-	int ret = adc_read_with_oversampling(voltage_mv);
+	// Lê tensão com oversampling
+	int ret = adc_read_with_oversampling(battery_millivolt);
 	if (ret < 0) 
 	{
 		LOG_ERR("Erro ao ler tensão da bateria");
 		return HAL_BATTERY_ERROR_READ;
 	}
 	
-	return HAL_BATTERY_SUCCESS;
-}
-
-uint8_t hal_battery_voltage_to_percentage(uint16_t voltage_mv)
-{
-	int32_t percentage;
-	
-	// Interpolação por segmentos para melhor precisão
-	if (voltage_mv >= BATTERY_VOLTAGE_MAX_MV) 
-	{
-		percentage = 100;
-	}
-	
-	else if (voltage_mv >= BATTERY_VOLTAGE_GOOD_MV) 
-	{
-		// 70% - 100%: 2.8V - 3.0V
-		percentage = linear_interpolate(voltage_mv,
-		                                BATTERY_VOLTAGE_GOOD_MV, 70,
-		                                BATTERY_VOLTAGE_MAX_MV, 100);
-	}
-	
-	else if (voltage_mv >= BATTERY_VOLTAGE_LOW_MV) 
-	{
-		// 30% - 70%: 2.5V - 2.8V
-		percentage = linear_interpolate(voltage_mv,
-		                                BATTERY_VOLTAGE_LOW_MV, 30,
-		                                BATTERY_VOLTAGE_GOOD_MV, 70);
-	}
-	
-	else if (voltage_mv >= BATTERY_VOLTAGE_CRIT_MV) 
-	{
-		// 10% - 30%: 2.2V - 2.5V
-		percentage = linear_interpolate(voltage_mv,
-		                                BATTERY_VOLTAGE_CRIT_MV, 10,
-		                                BATTERY_VOLTAGE_LOW_MV, 30);
-	}
-	
-	else if (voltage_mv >= BATTERY_VOLTAGE_MIN_MV) 
-	{
-		// 0% - 10%: 2.0V - 2.2V
-		percentage = linear_interpolate(voltage_mv,
-		                                BATTERY_VOLTAGE_MIN_MV, 0,
-		                                BATTERY_VOLTAGE_CRIT_MV, 10);
-	}
-	
-	else 
-	{
-		percentage = 0;
-	}
-	
-	// Garante range 0-100
-	if (percentage > 100) percentage = 100;
-	if (percentage < 0) percentage = 0;
-	
-	return (uint8_t)percentage;
-}
-
-hal_battery_state_t hal_battery_percentage_to_state(uint8_t percentage)
-{
-	if (percentage > 70) 
-	{
-		return HAL_BATTERY_STATE_GOOD;
-	}
-	
-	else if (percentage > 30) 
-	{
-		return HAL_BATTERY_STATE_MEDIUM;
-	}
-	
-	else if (percentage > 10) 
-	{
-		return HAL_BATTERY_STATE_LOW;
-	}
-	
-	else 
-	{
-		return HAL_BATTERY_STATE_CRITICAL;
-	}
-}
-
-int hal_battery_get_info(hal_battery_info_t *info)
-{
-	if (!initialized) 
-	{
-		LOG_ERR("HAL Battery não inicializado");
-		return HAL_BATTERY_ERROR_STATE;
-	}
-	
-	if (info == NULL) 
-	{
-		LOG_ERR("Ponteiro info é NULL");
-		return HAL_BATTERY_ERROR_READ;
-	}
-	
-	// Lê tensão
-	uint16_t voltage_mv;
-	int ret = hal_battery_read_voltage(&voltage_mv);
-	
-	if (ret != HAL_BATTERY_SUCCESS) 
-	{
-		return ret;
-	}
-	
-	// Calcula informações derivadas
-	uint8_t percentage = hal_battery_voltage_to_percentage(voltage_mv);
-	hal_battery_state_t state = hal_battery_percentage_to_state(percentage);
-	
-	// Atualiza estrutura
-	info->voltage_mv = voltage_mv;
-	info->percentage = percentage;
-	info->state = state;
-	
-	// Salva última leitura
-	last_reading = *info;
-	
-	LOG_DBG("Bateria: %d mV, %d%%, estado: %d", 
-	        voltage_mv, percentage, state);
+	LOG_DBG("Tensão da bateria: %d mV", *battery_millivolt);
 	
 	return HAL_BATTERY_SUCCESS;
-}
-
-bool hal_battery_is_critical(void)
-{
-	if (!initialized) 
-	{
-		return false;
-	}
-	
-	hal_battery_info_t info;
-	int ret = hal_battery_get_info(&info);
-	
-	if (ret != HAL_BATTERY_SUCCESS) 
-	{
-		return false;
-	}
-	
-	return (info.state == HAL_BATTERY_STATE_CRITICAL);
 }

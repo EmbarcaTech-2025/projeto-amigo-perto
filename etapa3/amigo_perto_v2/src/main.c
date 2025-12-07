@@ -1,120 +1,151 @@
 /*
  * Amigo Perto - Sistema de Alerta de Proximidade
- * 
- * @file main.c
- * @brief Aplicação principal do firmware
- * Localização: src/main.c
- * 
- * Descrição: Este firmware implementa um sistema de alerta de proximidade
- * controlado remotamente via Bluetooth Low Energy.
- * 
- * Funcionalidades:
- * - Advertising BLE para descoberta do dispositivo
- * - Serviço GATT Buzzer customizado (controle remoto de alarme)
- * - Serviço GATT Battery padrão (monitoramento de bateria CR2032)
- * - LEDs de status (verde=conexão, azul=advertising)
- * - HAL modular (Buzzer, Battery, BLE)
- * 
- * Arquitetura:
- * - src/main.c           - Aplicação principal
- * - src/hal/             - Hardware Abstraction Layer
- * - src/gatt/            - Serviços GATT BLE
- * - include/hal/         - Headers públicos HAL
- * - include/gatt/        - Headers públicos GATT
- * 
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Aplicação principal do firmware que implementa um sistema de alerta de proximidade
+ * controlado remotamente via Bluetooth Low Energy.
+ *
+ * Hardware:
+ * - XIAO nRF52840 (Nordic nRF52840)
+ * - Buzzer piezoelétrico (PWM)
+ * - Bateria LiPo 1S (3.0V-4.2V)
+ * - LED Verde (conexão BLE)
+ * - LED Azul (advertising)
+ *
+ * Funcionalidades:
+ * - BLE advertising para descoberta do dispositivo
+ * - Serviço GATT Buzzer customizado para controle remoto do alarme
+ * - Serviço GATT Battery padrão (0x180F) para monitoramento de bateria
+ * - LEDs de status para feedback visual
+ * - HAL modular para abstração de hardware
+ *
+ * Arquitetura:
+ * - src/main.c         : Aplicação principal (este arquivo)
+ * - src/hal/           : Hardware Abstraction Layer (BLE, Buzzer, Battery)
+ * - src/gatt/          : Serviços GATT BLE
+ * - include/hal/       : APIs públicas HAL
+ * - include/gatt/      : APIs públicas GATT
  */
 
-// Bibliotecas do Zephyr RTOS
-#include <zephyr/kernel.h>              // Funções principais do kernel (threads, timers, delays)
-#include <zephyr/logging/log.h>         // Sistema de logging para debug e mensagens
+// === INCLUDES DO ZEPHYR RTOS ===
+#include <zephyr/kernel.h>         // Kernel: threads, timers, delays
+#include <zephyr/logging/log.h>    // Sistema de logging
+#include <zephyr/drivers/gpio.h>   // Controle de GPIO para LEDs
 
-// Biblioteca para controle de GPIO
-#include <zephyr/drivers/gpio.h>       // Controle de GPIO para LEDs
+// === HARDWARE ABSTRACTION LAYER ===
+#include "hal/ble.h"        // HAL BLE: advertising, conexões
+#include "hal/buzzer.h"     // HAL Buzzer: controle PWM do alarme
+#include "hal/battery.h"    // HAL Battery: leitura de percentual
 
-// Hardware Abstraction Layer
-#include "hal/buzzer.h"
-#include "hal/battery.h"
-#include "hal/ble.h"
+// === SERVIÇOS GATT ===
+#include "gatt/buzzer_service.h"   // Serviço GATT customizado do buzzer
+#include "gatt/battery_service.h"  // Serviço GATT padrão de bateria (0x180F)
 
-// GATT Services
-#include "gatt/buzzer_service.h"
-#include "gatt/battery_service.h"
-
-// Registra o módulo de logging com o nome "MainApp" e nível INFO
+// Registra módulo de logging
 LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 
-// Configurações do nome do dispositivo
-#define DEVICE_NAME CONFIG_BT_DEVICE_NAME      		// Nome do dispositivo definido no prj.conf
+// === CONFIGURAÇÕES ===
 
-// LED verde: GPIO 30 - indica status de conexão
+// Nome do dispositivo BLE (definido em prj.conf via CONFIG_BT_DEVICE_NAME)
+#define DEVICE_NAME CONFIG_BT_DEVICE_NAME
+
+// Intervalo de advertising BLE em milissegundos
+// Menor intervalo = mais fácil descobrir, mas consome mais energia
+#define ADV_INTERVAL_MS 500
+
+// Threshold de bateria crítica (percentual)
+// Abaixo deste valor, um warning é exibido
+#define BATTERY_CRITICAL_THRESHOLD 10
+
+// === CONFIGURAÇÃO DOS LEDS ===
+
+// LED Verde: indica conexão BLE ativa
+// Hardware: GPIO configurado via devicetree alias 'ledverde'
 #define LED_VERDE_NODE DT_ALIAS(ledverde)
 #if DT_NODE_HAS_STATUS(LED_VERDE_NODE, okay)
 static const struct gpio_dt_spec led_verde = GPIO_DT_SPEC_GET(LED_VERDE_NODE, gpios);
 #else
-#error "Unsupported board: ledverde devicetree alias is not defined"
+#error "LED verde não configurado no devicetree (alias 'ledverde' ausente)"
 #endif
 
-// LED azul: GPIO 6 - indica eventos do sistema
+// LED Azul: indica advertising BLE ativo
+// Hardware: GPIO configurado via devicetree alias 'ledazul'
 #define LED_AZUL_NODE DT_ALIAS(ledazul)
 #if DT_NODE_HAS_STATUS(LED_AZUL_NODE, okay)
 static const struct gpio_dt_spec led_azul = GPIO_DT_SPEC_GET(LED_AZUL_NODE, gpios);
 #else
-#error "Unsupported board: ledazul devicetree alias is not defined"
+#error "LED azul não configurado no devicetree (alias 'ledazul' ausente)"
 #endif
 
-/**
- * Callbacks HAL BLE - Eventos de conexão Bluetooth
- */
+// === CALLBACKS BLE ===
+// Funções chamadas pelo HAL BLE para notificar eventos de conexão
 
 /**
- * Callback chamado quando um dispositivo se conecta via BLE
+ * Callback: Dispositivo conectado via BLE
+ *
+ * Chamado quando um dispositivo central (ex: smartphone) estabelece conexão.
+ * Atualiza LEDs de status e exibe parâmetros de conexão negociados.
+ *
+ * @param conn_info Informações da conexão (intervalo, latência, timeout)
  */
 static void on_ble_connected(const hal_ble_conn_info_t *conn_info)
 {
-	LOG_INF("Dispositivo conectado");
-	LOG_INF("  Intervalo: %u ms", conn_info->interval_ms);
-	LOG_INF("  Latência: %u", conn_info->latency);
-	LOG_INF("  Timeout: %u ms", conn_info->timeout_ms);
-	// Apaga o LED azul e acende o LED verde ao conectar
+	LOG_INF("=== BLE CONECTADO ===");
+	LOG_INF("Intervalo: %u ms", conn_info->interval_ms);
+	LOG_INF("Latência: %u conexões", conn_info->latency);
+	LOG_INF("Timeout: %u ms", conn_info->timeout_ms);
+	
+	// Atualiza LEDs: azul OFF (para advertising), verde ON (conectado)
 	gpio_pin_set_dt(&led_azul, 0);
 	gpio_pin_set_dt(&led_verde, 1);
 }
 
 /**
- * Callback chamado quando um dispositivo se desconecta
+ * Callback: Dispositivo desconectado
+ *
+ * Chamado quando a conexão BLE é encerrada (timeout, comando remoto, etc).
+ * Desliga o buzzer (segurança) e atualiza status dos LEDs.
+ *
+ * @param reason Código HCI do motivo da desconexão
  */
 static void on_ble_disconnected(uint8_t reason)
 {
-	LOG_INF("Dispositivo desconectado (motivo %u)", reason);
-	// Desativa o buzzer intermitente ao desconectar
+	LOG_INF("=== BLE DESCONECTADO ===");
+	LOG_INF("Motivo: 0x%02X", reason);
+	
+	// Segurança: desliga buzzer ao desconectar
 	hal_buzzer_set_intermittent(false, 0);
-	// Apaga o LED verde ao desconectar
+	
+	// Atualiza LED: verde OFF (não conectado)
 	gpio_pin_set_dt(&led_verde, 0);
 }
 
 /**
- * Callback chamado quando advertising é iniciado
+ * Callback: Advertising iniciado
+ *
+ * Chamado quando o dispositivo começa a anunciar sua presença.
+ * Dispositivos BLE podem descobrir e conectar neste estado.
  */
 static void on_ble_adv_started(void)
 {
-	LOG_INF("Advertising iniciado");
-	// Mantém o LED azul aceso durante advertising
+	LOG_INF("BLE Advertising iniciado");
+	
+	// Atualiza LED: azul ON (advertising ativo)
 	gpio_pin_set_dt(&led_azul, 1);
 }
 
 /**
- * Callback chamado quando advertising é parado
+ * Callback: Advertising parado
+ *
+ * Chamado quando advertising é interrompido (conexão estabelecida ou erro).
  */
 static void on_ble_adv_stopped(void)
 {
-	LOG_INF("Advertising parado");
+	LOG_DBG("BLE Advertising parado");
 }
 
-/**
- * Estrutura de callbacks BLE
- */
+// Registra callbacks BLE no HAL
 static const hal_ble_callbacks_t ble_callbacks = {
 	.connected = on_ble_connected,
 	.disconnected = on_ble_disconnected,
@@ -122,204 +153,245 @@ static const hal_ble_callbacks_t ble_callbacks = {
 	.adv_stopped = on_ble_adv_stopped,
 };
 
-/**
- * Callbacks GATT Buzzer Service - Eventos de escrita nas características
- */
+// === CALLBACKS GATT BUZZER SERVICE ===
+// Funções chamadas quando características GATT são escritas remotamente
 
 /**
- * Callback chamado quando o buzzer intermitente é acionado via BLE
+ * Callback: Característica Buzzer Intermitente escrita via BLE
+ *
+ * Chamado quando o dispositivo central (smartphone) escreve na característica
+ * Buzzer Intermittent do serviço GATT customizado.
+ *
+ * Controla o modo intermitente do alarme com intensidade média.
+ *
+ * @param buzzer_state true=ativar alarme intermitente, false=desligar
  */
 static void on_buzzer_intermittent_write(const bool buzzer_state)
 {
-	LOG_INF("Buzzer Intermitente via BLE: %s", buzzer_state ? "ATIVADO" : "DESATIVADO");
-	int err;
-	err = hal_buzzer_set_intermittent(buzzer_state, HAL_BUZZER_INTENSITY_MEDIUM);
+	LOG_INF("=== COMANDO BUZZER ===");
+	LOG_INF("Estado: %s", buzzer_state ? "ATIVADO" : "DESATIVADO");
+	
+	// Controla o buzzer através do HAL com intensidade média
+	int err = hal_buzzer_set_intermittent(buzzer_state, HAL_BUZZER_INTENSITY_MEDIUM);
 	if (err != HAL_BUZZER_SUCCESS) 
 	{
-		LOG_ERR("Falha ao controlar buzzer intermitente (err %d)", err);
+		LOG_ERR("Erro ao controlar buzzer: %d", err);
 	}
 }
 
-/**
- * Estrutura de callbacks GATT Buzzer
- */
+// Registra callbacks Buzzer Service
 static const struct gatt_buzzer_service_cb buzzer_callbacks = {
 	.buzzer_intermittent_cb = on_buzzer_intermittent_write,
 };
 
-/**
- * Callbacks GATT Battery Service - Eventos de leitura da bateria
- */
+// === CALLBACKS GATT BATTERY SERVICE ===
+// Funções chamadas quando características GATT são lidas remotamente
 
 /**
- * Callback chamado quando a bateria é lida via BLE
+ * Callback: Característica Battery Level lida via BLE
+ *
+ * Chamado quando o dispositivo central (smartphone) lê a característica
+ * Battery Level (0x2A19) do serviço GATT padrão Battery (0x180F).
+ *
+ * @param percentage Percentual de bateria lido (0-100%)
+ * @param voltage_mv Tensão da bateria em milivolts
  */
-static void on_battery_read(uint8_t percentage)
+static void on_battery_read(uint8_t percentage, uint16_t voltage_mv)
 {
-	LOG_INF("Bateria lida via BLE: %d%%", percentage);
+	LOG_INF("Bateria lida via BLE: %d%% (%dmV)", percentage, voltage_mv);
 }
 
-/**
- * Estrutura de callbacks GATT Battery
- */
+// Registra callbacks Battery Service
 static const struct gatt_battery_service_cb battery_callbacks = {
 	.battery_read_cb = on_battery_read,
 };
 
+// === FUNÇÃO PRINCIPAL ===
+
 /**
- * Função principal do programa
- * Inicializa todos os componentes usando HAL e entra em loop infinito
+ * Função principal do firmware
+ *
+ * Sequência de inicialização:
+ * 1. LEDs de status (verde e azul)
+ * 2. HAL Buzzer (controle PWM do alarme)
+ * 3. HAL Battery (leitura ADC da bateria LiPo)
+ * 4. HAL BLE (stack Bluetooth)
+ * 5. Serviços GATT (Buzzer e Battery)
+ * 6. Inicia advertising BLE
+ * 7. Loop infinito aguardando eventos via callbacks
+ *
  * @return 0 em caso de sucesso, -1 em caso de erro
  */
 int main(void)
 {
 	int err;
 
-	LOG_INF("==================================================");
-	LOG_INF("  Amigo Perto - Sistema de Alerta de Proximidade");
-	LOG_INF("==================================================");
+	LOG_INF("=============================================");
+	LOG_INF("   Amigo Perto - Alerta de Proximidade");
+	LOG_INF("=============================================");
+	LOG_INF("");
 
-	// ========== Inicialização dos LEDs de status ==========
+	// === ETAPA 1: Inicialização dos LEDs ===
 	
+	LOG_INF("[1/6] Inicializando LEDs...");
+	
+	// Verifica se GPIOs estão prontos
 	if (!gpio_is_ready_dt(&led_verde)) 
 	{
-		LOG_ERR("GPIO do LED verde não está pronto");
+		LOG_ERR("GPIO LED verde não está pronto");
 		return -1;
 	}
 	
 	if (!gpio_is_ready_dt(&led_azul)) 
 	{
-		LOG_ERR("GPIO do LED azul não está pronto");
+		LOG_ERR("GPIO LED azul não está pronto");
 		return -1;
 	}
 
+	// Configura LEDs como saída, inicialmente desligados
 	err = gpio_pin_configure_dt(&led_verde, GPIO_OUTPUT_INACTIVE);
-
 	if (err) 
 	{
-		LOG_ERR("Falha ao configurar LED verde (err %d)", err);
+		LOG_ERR("Erro ao configurar LED verde: %d", err);
 		return -1;
 	}
 	
 	err = gpio_pin_configure_dt(&led_azul, GPIO_OUTPUT_INACTIVE);
-
 	if (err) 
 	{
-		LOG_ERR("Falha ao configurar LED azul (err %d)", err);
+		LOG_ERR("Erro ao configurar LED azul: %d", err);
 		return -1;
 	}
 
-	LOG_INF("LEDs de status configurados");
-	
-	// Não acende LED verde durante inicialização
+	LOG_INF("LEDs configurados com sucesso");
+	LOG_INF("");
 
-	// ========== Inicialização HAL Buzzer ==========
+	// === ETAPA 2: Inicialização do Buzzer ===
+	
+	LOG_INF("[2/6] Inicializando HAL Buzzer...");
 	
 	err = hal_buzzer_init();
 	if (err != HAL_BUZZER_SUCCESS) 
 	{
-		LOG_ERR("Falha ao inicializar HAL Buzzer (err %d)", err);
+		LOG_ERR("Erro ao inicializar HAL Buzzer: %d", err);
 		return -1;
 	}
 
 	LOG_INF("HAL Buzzer inicializado");
+	LOG_INF("");
 	
-	// ========== Inicialização HAL Battery ==========
+	// === ETAPA 3: Inicialização da Bateria ===
+	
+	LOG_INF("[3/6] Inicializando HAL Battery...");
 	
 	err = hal_battery_init();
 	if (err != HAL_BATTERY_SUCCESS) 
 	{
-		LOG_ERR("Falha ao inicializar HAL Battery (err %d)", err);
+		LOG_ERR("Erro ao inicializar HAL Battery: %d", err);
 		return -1;
 	}
 
-	LOG_INF("HAL Battery inicializado");
+	// Lê nível inicial da bateria
+	uint8_t battery_level = hal_battery_get_percentage();
+	LOG_INF("HAL Battery inicializado - Nível: %d%%", battery_level);
 	
-	// Lê informações da bateria
-	hal_battery_info_t battery_info;
-	err = hal_battery_get_info(&battery_info);
-	
-	if (err == HAL_BATTERY_SUCCESS) 
+	// Alerta se bateria estiver crítica
+	if (battery_level < BATTERY_CRITICAL_THRESHOLD) 
 	{
-		LOG_INF("Bateria: %d mV (%d%%), Estado: %d",
-		        battery_info.voltage_mv,
-		        battery_info.percentage,
-		        battery_info.state);
-		
-		// Alerta se bateria crítica
-		if (battery_info.state == HAL_BATTERY_STATE_CRITICAL) 
-		{
-			LOG_WRN("BATERIA CRÍTICA! Substituir bateria em breve");
-		}
+		LOG_WRN("ATENÇÃO: Bateria crítica! (%d%%) - Recarregue em breve", battery_level);
 	}
+	LOG_INF("");
 	
-	// ========== Inicialização HAL BLE ==========
+	// === ETAPA 4: Inicialização do BLE ===
+	
+	LOG_INF("[4/6] Inicializando HAL BLE...");
 	
 	err = hal_ble_init(DEVICE_NAME, &ble_callbacks);
 	if (err != HAL_BLE_SUCCESS) 
 	{
-		LOG_ERR("Falha ao inicializar HAL BLE (err %d)", err);
+		LOG_ERR("Erro ao inicializar HAL BLE: %d", err);
 		return -1;
 	}
 
-	LOG_INF("HAL BLE inicializado");
+	LOG_INF("HAL BLE inicializado - Device: %s", DEVICE_NAME);
+	LOG_INF("");
 	
-	// ========== Inicialização Serviço GATT Buzzer ==========
+	// === ETAPA 5: Inicialização dos Serviços GATT ===
 	
+	LOG_INF("[5/6] Inicializando serviços GATT...");
+	
+	// Serviço customizado: Buzzer Service
 	err = gatt_buzzer_service_init(&buzzer_callbacks);
 	if (err != 0) 
 	{
-		LOG_ERR("Falha ao inicializar serviço GATT Buzzer (err %d)", err);
+		LOG_ERR("Erro ao inicializar GATT Buzzer Service: %d", err);
 		return -1;
 	}
-
-	LOG_INF("Serviço GATT Buzzer inicializado");
+	LOG_INF("  - Buzzer Service (customizado)");
 	
-	// ========== Inicialização Serviço GATT Battery ==========
-	
+	// Serviço padrão: Battery Service (UUID 0x180F)
 	err = gatt_battery_service_init(&battery_callbacks);
 	if (err != 0) 
 	{
-		LOG_ERR("Falha ao inicializar serviço GATT Battery (err %d)", err);
+		LOG_ERR("Erro ao inicializar GATT Battery Service: %d", err);
 		return -1;
 	}
-
-	LOG_INF("Serviço GATT Battery inicializado");
+	LOG_INF("  - Battery Service (0x180F)");
 	
-	// ========== Inicia Advertising ==========
+	LOG_INF("Serviços GATT inicializados");
+	LOG_INF("");
 	
-	// Parâmetros customizados de advertising
+	// === ETAPA 6: Inicia Advertising BLE ===
+	
+	LOG_INF("[6/6] Iniciando BLE Advertising...");
+	
+	// Configura parâmetros de advertising
 	hal_ble_adv_params_t adv_params = {
-		.interval_min_ms = 500,
-		.interval_max_ms = 500,
-		.connectable = true,
-		.use_identity = true,
+		.interval_min_ms = ADV_INTERVAL_MS,   // Intervalo entre anúncios
+		.interval_max_ms = ADV_INTERVAL_MS,   // Intervalo fixo
+		.connectable = true,                  // Aceita conexões
+		.use_identity = true,                 // Usa MAC fixo (rastreável)
 	};
 	
 	err = hal_ble_start_advertising(&adv_params);
-
 	if (err != HAL_BLE_SUCCESS) 
 	{
-		LOG_ERR("Falha ao iniciar advertising (err %d)", err);
+		LOG_ERR("Erro ao iniciar advertising: %d", err);
 		return -1;
 	}
 	
-	// ========== Sistema Pronto ==========
-	
-	// Não apaga LED verde após inicialização
-	
-	LOG_INF("==================================================");
-	LOG_INF("  Sistema inicializado com sucesso!");
-	LOG_INF("  Aguardando conexão BLE...");
+	LOG_INF("Advertising iniciado - Intervalo: %d ms", ADV_INTERVAL_MS);
 	LOG_INF("");
-	LOG_INF("  Controle remoto disponível via BLE:");
-	LOG_INF("    - Buzzer Intermitente (0x00=OFF, 0x01=ON)");
-	LOG_INF("    - Battery Service (0x180F) - Leitura sob demanda");
-	LOG_INF("==================================================");
 	
-	for (;;) 
+	// === SISTEMA PRONTO ===
+	
+	LOG_INF("=============================================");
+	LOG_INF("   SISTEMA INICIALIZADO COM SUCESSO");
+	LOG_INF("=============================================");
+	LOG_INF("");
+	LOG_INF("Status:");
+	LOG_INF("  - BLE Advertising: ATIVO");
+	LOG_INF("  - Aguardando conexão...");
+	LOG_INF("");
+	LOG_INF("Serviços BLE disponíveis:");
+	LOG_INF("  - Buzzer Service (customizado)");
+	LOG_INF("      Intermittent: write 0x01=ON, 0x00=OFF");
+	LOG_INF("  - Battery Service (0x180F)");
+	LOG_INF("      Battery Level (0x2A19): read 0-100%%");
+	LOG_INF("      Battery Voltage (customizado): read milivolts");
+	LOG_INF("");
+	LOG_INF("LEDs:");
+	LOG_INF("  - Azul: Advertising ativo");
+	LOG_INF("  - Verde: Conectado");
+	LOG_INF("=============================================");
+	
+	// Loop infinito - sistema controlado por eventos via callbacks
+	while (1) 
 	{
-		// O sistema responde via callbacks BLE
+		// Suspende thread principal indefinidamente
+		// Toda a lógica é controlada por callbacks assíncronos:
+		// - BLE: on_ble_connected, on_ble_disconnected
+		// - GATT: on_buzzer_intermittent_write, on_battery_read
 		k_sleep(K_FOREVER);
 	}
 	

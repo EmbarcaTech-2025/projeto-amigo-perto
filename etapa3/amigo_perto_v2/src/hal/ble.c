@@ -1,23 +1,16 @@
 /*
  * HAL BLE - Hardware Abstraction Layer para Bluetooth Low Energy
- * 
- * @file ble.c
- * @brief Implementação do HAL BLE
- * Localização: src/hal/ble.c
- * Header público: include/hal/ble.h
- * 
- * Este módulo implementa o controle do stack Bluetooth Low Energy,
- * encapsulando as APIs do Zephyr e fornecendo interface simplificada.
- * 
- * Funcionalidades:
- * - Inicialização e configuração do stack BLE
- * - Controle de advertising (start/stop, parâmetros customizados)
- * - Gerenciamento de conexões (callbacks de eventos)
- * - Atualização de parâmetros de conexão
- * - Encapsulamento das APIs Zephyr para facilitar uso
- * 
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Este módulo implementa o controle do stack Bluetooth Low Energy,
+ * encapsulando as APIs do Zephyr e fornecendo interface simplificada.
+ *
+ * Arquitetura:
+ * - Inicialização do stack BLE e registro de callbacks
+ * - Controle de advertising (start com parâmetros customizados)
+ * - Gerenciamento automático de conexões via callbacks do Zephyr
+ * - Notificação de eventos para a aplicação via callbacks
  */
 
 #include "hal/ble.h"
@@ -40,95 +33,114 @@
 // Registra módulo de logging
 LOG_MODULE_REGISTER(hal_ble, LOG_LEVEL_DBG);
 
-/*******************************************************************************
- * CONFIGURAÇÕES E CONSTANTES
- ******************************************************************************/
+// === CONSTANTES E CONFIGURAÇÕES ===
 
-// Valores padrão para advertising
-#define DEFAULT_ADV_INTERVAL_MIN_MS     500   /**< 500ms */
-#define DEFAULT_ADV_INTERVAL_MAX_MS     500   /**< 500ms */
+// Valores padrão para advertising quando adv_params é NULL
+#define DEFAULT_ADV_INTERVAL_MIN_MS     500   // 500ms entre anúncios
+#define DEFAULT_ADV_INTERVAL_MAX_MS     500   // 500ms entre anúncios
 
-// Limites dos parâmetros de advertising (conforme spec Bluetooth)
-#define ADV_INTERVAL_MIN_MS             20
-#define ADV_INTERVAL_MAX_MS             10240
+// Limites dos parâmetros de advertising (conforme especificação Bluetooth)
+#define ADV_INTERVAL_MIN_MS             20    // Mínimo permitido pela spec
+#define ADV_INTERVAL_MAX_MS             10240 // Máximo permitido pela spec
 
-// Tamanho máximo do nome do dispositivo
+// Tamanho máximo do nome do dispositivo no advertising data
 #define MAX_DEVICE_NAME_LEN             29
 
-// Conversão de milissegundos para unidades BLE (0.625ms por unidade)
+// Conversão: BLE usa unidades de 0.625ms, precisamos converter de milissegundos
+// Fórmula: unidades_ble = ms * (1000 / 625) = ms * 8 / 5
 #define MS_TO_BLE_UNITS(ms)             ((ms) * 8 / 5)
 
-/*******************************************************************************
- * VARIÁVEIS PRIVADAS
- ******************************************************************************/
+// === VARIÁVEIS PRIVADAS (Estado interno do módulo) ===
 
-// Estado do módulo
+// Flag indicando se o módulo foi inicializado com sucesso
 static bool initialized = false;
-static hal_ble_state_t current_state = HAL_BLE_STATE_IDLE;
+
+// Callbacks fornecidos pela aplicação para notificação de eventos
 static hal_ble_callbacks_t user_callbacks = {0};
 
-// Nome do dispositivo
+// Nome do dispositivo usado no advertising (armazenado localmente)
 static char device_name[MAX_DEVICE_NAME_LEN + 1] = {0};
 
-// Conexão atual
+// Referência à conexão BLE atual (NULL = desconectado)
+// O Zephyr usa reference counting, precisamos chamar bt_conn_ref/unref
 static struct bt_conn *current_conn = NULL;
 
 // Work item para iniciar advertising de forma assíncrona
+// Usado para evitar bloqueios e permitir chamadas de contexto de callback
 static struct k_work adv_work;
 
-// Dados de advertising
-static struct bt_data ad_data[2];
-static struct bt_data sd_data[1];
+// Arrays com os dados de advertising (AD) e scan response (SD)
+// AD: dados enviados no pacote principal de advertising
+// SD: dados adicionais enviados quando um scanner solicita mais informações
+static struct bt_data ad_data[2];  // [0]=Flags, [1]=Nome
+static struct bt_data sd_data[1];  // [0]=UUID do serviço
 static size_t ad_data_count = 0;
 static size_t sd_data_count = 0;
 
-// Parâmetros de advertising
+// Armazenamento para parâmetros customizados de advertising
 static struct bt_le_adv_param adv_param_storage;
 static const struct bt_le_adv_param *adv_param = NULL;
 
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - CALLBACKS DO STACK BLUETOOTH
- ******************************************************************************/
+// === CALLBACKS DO STACK BLUETOOTH (chamados pelo Zephyr) ===
 
 /**
- * @brief Callback chamado quando uma conexão é estabelecida
+ * Callback chamado pelo stack Zephyr quando uma conexão BLE é estabelecida
+ * 
+ * Este callback é invocado automaticamente quando um dispositivo central
+ * (ex: smartphone) completa o processo de conexão com nosso periférico.
+ * 
+ * Fluxo:
+ * 1. Verifica se houve erro na conexão
+ * 2. Se erro, reinicia advertising para aceitar nova tentativa
+ * 3. Se sucesso, armazena referência da conexão
+ * 4. Lê parâmetros negociados (intervalo, latência, timeout)
+ * 5. Notifica a aplicação via callback user_callbacks.connected
+ * 
+ * Parâmetros:
+ *   conn: ponteiro para estrutura de conexão do Zephyr
+ *   err: 0=sucesso, outro valor=código de erro
  */
 static void on_connected(struct bt_conn *conn, uint8_t err)
 {
+	// Se houve erro ao estabelecer conexão
 	if (err) 
 	{
 		LOG_ERR("Conexão falhou (err %u)", err);
-		
-		// Reinicia advertising
+		// Reinicia advertising para aceitar novas tentativas
 		k_work_submit(&adv_work);
 		return;
 	}
 	
-	// Armazena referência da conexão
+	// Armazena referência da conexão (incrementa ref count)
+	// Se já tínhamos uma conexão anterior, libera ela primeiro
 	if (current_conn) 
 	{
 		bt_conn_unref(current_conn);
 	}
 	current_conn = bt_conn_ref(conn);
-	current_state = HAL_BLE_STATE_CONNECTED;
 	
-	// Lê informações da conexão
+	// Lê informações da conexão estabelecida
 	struct bt_conn_info info;
 	if (bt_conn_get_info(conn, &info) == 0) 
 	{
-		LOG_INF("Conectado - Intervalo: %u, Latência: %u, Timeout: %u", info.le.interval, info.le.latency, info.le.timeout);
+		LOG_INF("Conectado - Intervalo: %u, Latência: %u, Timeout: %u", 
+		        info.le.interval, info.le.latency, info.le.timeout);
 	}
 	
-	// Notifica aplicação
+	// Notifica a aplicação se callback foi registrado
 	if (user_callbacks.connected) 
 	{
+		// Converte informações do Zephyr para formato do HAL
 		hal_ble_conn_info_t conn_info = {0};
 		
 		if (bt_conn_get_info(conn, &info) == 0) 
 		{
-			conn_info.interval_ms = info.le.interval * 1250 / 1000; // 1.25ms por unidade
+			// Conversões de unidades:
+			// - Intervalo: unidades de 1.25ms -> milissegundos
+			// - Timeout: unidades de 10ms -> milissegundos
+			conn_info.interval_ms = info.le.interval * 1250 / 1000;
 			conn_info.latency = info.le.latency;
-			conn_info.timeout_ms = info.le.timeout * 10; // 10ms por unidade
+			conn_info.timeout_ms = info.le.timeout * 10;
 		}
 		
 		user_callbacks.connected(&conn_info);
@@ -136,22 +148,29 @@ static void on_connected(struct bt_conn *conn, uint8_t err)
 }
 
 /**
- * @brief Callback chamado quando uma conexão é encerrada
+ * Callback chamado pelo stack Zephyr quando uma conexão BLE é encerrada
+ * 
+ * Motivos comuns de desconexão:
+ * - 0x13: Usuário encerrou a conexão remotamente
+ * - 0x08: Timeout de conexão (dispositivos muito distantes)
+ * - 0x16: Conexão encerrada pelo host local
+ * 
+ * Parâmetros:
+ *   conn: ponteiro para estrutura de conexão do Zephyr
+ *   reason: código HCI indicando motivo da desconexão
  */
 static void on_disconnected(struct bt_conn *conn, uint8_t reason)
 {
-	LOG_INF("Desconectado (motivo %u)", reason);
+	LOG_INF("Desconectado (motivo 0x%02X)", reason);
 	
-	// Libera referência da conexão
+	// Libera referência da conexão (decrementa ref count)
 	if (current_conn) 
 	{
 		bt_conn_unref(current_conn);
 		current_conn = NULL;
 	}
 	
-	current_state = HAL_BLE_STATE_READY;
-	
-	// Notifica aplicação
+	// Notifica a aplicação se callback foi registrado
 	if (user_callbacks.disconnected) 
 	{
 		user_callbacks.disconnected(reason);
@@ -159,42 +178,55 @@ static void on_disconnected(struct bt_conn *conn, uint8_t reason)
 }
 
 /**
- * @brief Callback chamado quando a conexão é reciclada
+ * Callback chamado quando o objeto de conexão é reciclado pelo Zephyr
+ * 
+ * O Zephyr possui um pool limitado de objetos bt_conn. Quando uma conexão
+ * é encerrada e o objeto é liberado para reutilização, este callback é chamado.
+ * Aproveitamos para reiniciar o advertising automaticamente.
  */
 static void on_recycled(void)
 {
 	LOG_DBG("Conexão reciclada - reiniciando advertising");
-	
-	// Reinicia advertising
+	// Reinicia advertising para aceitar novas conexões
 	k_work_submit(&adv_work);
 }
 
-// Estrutura de callbacks de conexão
+// Estrutura de callbacks de conexão registrada no Zephyr
 static struct bt_conn_cb conn_callbacks = {
 	.connected = on_connected,
 	.disconnected = on_disconnected,
 	.recycled = on_recycled,
 };
 
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - ADVERTISING
- ******************************************************************************/
+// === FUNÇÕES PRIVADAS - CONTROLE DE ADVERTISING ===
 
 /**
- * @brief Handler do work item para iniciar advertising
+ * Handler do work item para iniciar advertising
+ * 
+ * Esta função é executada de forma assíncrona pelo kernel do Zephyr quando
+ * k_work_submit(&adv_work) é chamado. Usar work items permite iniciar advertising
+ * de forma segura mesmo dentro de callbacks (contexto de interrupção).
+ * 
+ * Fluxo:
+ * 1. Verifica se já está conectado (não pode fazer advertising conectado)
+ * 2. Usa parâmetros customizados ou padrões (500ms)
+ * 3. Chama API do Zephyr bt_le_adv_start()
+ * 4. Notifica aplicação via callback adv_started
  */
 static void adv_work_handler(struct k_work *work)
 {
-	if (current_state == HAL_BLE_STATE_CONNECTED) 
+	// Não pode fazer advertising se já está conectado
+	if (current_conn != NULL) 
 	{
 		LOG_WRN("Já conectado, não inicia advertising");
 		return;
 	}
 	
-	// Usa parâmetros padrão se não foram configurados
+	// Usa parâmetros customizados ou padrões
 	const struct bt_le_adv_param *param = adv_param;
 	if (!param) 
 	{
+		// Parâmetros padrão: conectável, 500ms, usa endereço fixo
 		param = BT_LE_ADV_PARAM(
 			(BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_USE_IDENTITY),
 			MS_TO_BLE_UNITS(DEFAULT_ADV_INTERVAL_MIN_MS),
@@ -203,7 +235,9 @@ static void adv_work_handler(struct k_work *work)
 		);
 	}
 	
-	// Inicia advertising
+	// Inicia advertising com os dados preparados em prepare_adv_data()
+	// ad_data: dados principais (flags + nome)
+	// sd_data: scan response (UUID do serviço)
 	int err = bt_le_adv_start(param, ad_data, ad_data_count, sd_data, sd_data_count);
 	if (err) 
 	{
@@ -211,10 +245,9 @@ static void adv_work_handler(struct k_work *work)
 		return;
 	}
 	
-	current_state = HAL_BLE_STATE_ADVERTISING;
 	LOG_INF("Advertising iniciado");
 	
-	// Notifica aplicação
+	// Notifica aplicação se callback foi registrado
 	if (user_callbacks.adv_started) 
 	{
 		user_callbacks.adv_started();
@@ -222,23 +255,37 @@ static void adv_work_handler(struct k_work *work)
 }
 
 /**
- * @brief Prepara os dados de advertising
+ * Prepara os dados de advertising e scan response
+ * 
+ * O advertising BLE possui dois tipos de dados:
+ * 
+ * 1. ADVERTISING DATA (AD): Enviado em todo pacote de advertising
+ *    - Flags: indica modo de descoberta e recursos suportados
+ *    - Nome: nome completo do dispositivo (para identificação)
+ * 
+ * 2. SCAN RESPONSE DATA (SD): Enviado apenas quando scanner solicita
+ *    - UUIDs: lista de serviços GATT oferecidos pelo dispositivo
+ * 
+ * Esta abordagem otimiza o uso de espaço (advertising data é limitado a 31 bytes)
+ * e energia (scan response só é enviado quando necessário).
  */
 static void prepare_adv_data(void)
 {
 	size_t name_len = strlen(device_name);
 	
-	// Advertising data
+	// --- ADVERTISING DATA ---
 	ad_data_count = 0;
 	
-	// Flags
+	// Flags: General Discoverable + BR/EDR Not Supported
+	// General Discoverable: dispositivo sempre detectável
+	// BR/EDR Not Supported: apenas BLE, sem Bluetooth Classic
 	ad_data[ad_data_count].type = BT_DATA_FLAGS;
 	ad_data[ad_data_count].data_len = 1;
 	static const uint8_t flags = BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR;
 	ad_data[ad_data_count].data = &flags;
 	ad_data_count++;
 	
-	// Nome do dispositivo
+	// Nome completo do dispositivo
 	if (name_len > 0) 
 	{
 		ad_data[ad_data_count].type = BT_DATA_NAME_COMPLETE;
@@ -247,37 +294,54 @@ static void prepare_adv_data(void)
 		ad_data_count++;
 	}
 	
-	// Scan response data
+	// --- SCAN RESPONSE DATA ---
 	sd_data_count = 0;
 	
-	// UUID do serviço customizado Buzzer Service (declaração estática)
+	// UUID do serviço customizado Buzzer Service
+	// Declarado como static para garantir que o ponteiro permanece válido
 	static const struct bt_uuid_128 buzzer_uuid = BT_UUID_INIT_128(BT_UUID_BUZZER_SERVICE_VAL);
 	
 	sd_data[sd_data_count].type = BT_DATA_UUID128_ALL;
-	sd_data[sd_data_count].data_len = 16;
+	sd_data[sd_data_count].data_len = 16;  // UUID 128 bits = 16 bytes
 	sd_data[sd_data_count].data = buzzer_uuid.val;
 	sd_data_count++;
 }
 
-/*******************************************************************************
- * API PÚBLICA
- ******************************************************************************/
+// === API PÚBLICA ===
 
+/**
+ * Inicializa o subsistema BLE
+ * 
+ * Esta é a primeira função que deve ser chamada antes de qualquer outra
+ * operação BLE. Ela executa as seguintes etapas:
+ * 
+ * 1. Valida parâmetros de entrada
+ * 2. Armazena nome do dispositivo e callbacks
+ * 3. Habilita o stack Bluetooth do Zephyr (bt_enable)
+ * 4. Registra callbacks de conexão no stack
+ * 5. Prepara dados de advertising
+ * 6. Inicializa work item para advertising assíncrono
+ * 
+ * IMPORTANTE: Chame esta função DEPOIS de inicializar os serviços GATT,
+ * pois prepare_adv_data() referencia UUIDs dos serviços.
+ */
 int hal_ble_init(const char *device_name_param, const hal_ble_callbacks_t *callbacks)
 {
+	// Previne reinicialização
 	if (initialized) 
 	{
 		LOG_WRN("HAL BLE já inicializado");
 		return HAL_BLE_SUCCESS;
 	}
 	
-	// Valida parâmetros
+	// Validação: nome do dispositivo é obrigatório
 	if (!device_name_param) 
 	{
 		LOG_ERR("Nome do dispositivo não pode ser NULL");
 		return HAL_BLE_ERROR_INVALID;
 	}
 	
+	// Validação: nome não pode exceder limite do advertising data
 	size_t name_len = strlen(device_name_param);
 	if (name_len > MAX_DEVICE_NAME_LEN) 
 	{
@@ -285,17 +349,18 @@ int hal_ble_init(const char *device_name_param, const hal_ble_callbacks_t *callb
 		return HAL_BLE_ERROR_INVALID;
 	}
 	
-	// Armazena nome do dispositivo
+	// Armazena nome do dispositivo localmente
 	strncpy(device_name, device_name_param, MAX_DEVICE_NAME_LEN);
 	device_name[MAX_DEVICE_NAME_LEN] = '\0';
 	
-	// Armazena callbacks
+	// Armazena callbacks se fornecidos
 	if (callbacks) 
 	{
 		user_callbacks = *callbacks;
 	}
 	
-	// Habilita Bluetooth
+	// Habilita o stack Bluetooth do Zephyr
+	// NULL = inicialização síncrona (bloqueia até completar)
 	int err = bt_enable(NULL);
 	if (err) 
 	{
@@ -305,50 +370,61 @@ int hal_ble_init(const char *device_name_param, const hal_ble_callbacks_t *callb
 	
 	LOG_INF("Bluetooth habilitado");
 	
-	// Registra callbacks de conexão
+	// Registra callbacks de conexão no stack Zephyr
+	// Isso permite receber notificações de connected/disconnected/recycled
 	bt_conn_cb_register(&conn_callbacks);
 	
-	// Inicializa serviço customizado MY LBS
-	// (callbacks do serviço serão registrados pela aplicação)
-	
-	// Prepara dados de advertising
+	// Prepara os dados que serão enviados no advertising
+	// (flags, nome, UUIDs de serviços)
 	prepare_adv_data();
 	
-	// Inicializa work item para advertising
+	// Inicializa work item para advertising assíncrono
+	// Permite iniciar advertising de forma segura de qualquer contexto
 	k_work_init(&adv_work, adv_work_handler);
 	
-	// Estado pronto
-	current_state = HAL_BLE_STATE_READY;
+	// Marca módulo como inicializado
 	initialized = true;
 	
 	LOG_INF("HAL BLE inicializado - Device: %s", device_name);
 	return HAL_BLE_SUCCESS;
 }
 
+/**
+ * Inicia o advertising BLE
+ * 
+ * Após chamar hal_ble_init(), use esta função para começar a anunciar o
+ * dispositivo. Outros dispositivos BLE poderão descobrir e conectar.
+ * 
+ * O advertising pode ser customizado via adv_params:
+ * - Intervalo: tempo entre pacotes de advertising (afeta consumo de energia)
+ * - Connectable: se permite conexões ou é apenas beacon
+ * - Use identity: usar MAC fixo (rastreavel) ou aleatório (privacidade)
+ * 
+ * Se adv_params = NULL, usa valores padrão (500ms, conectável, MAC fixo)
+ * 
+ * IMPORTANTE: O advertising para automaticamente quando uma conexão é
+ * estabelecida. Use o callback adv_stopped para detectar isso.
+ */
 int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 {
+	// Verifica se módulo foi inicializado
 	if (!initialized) 
 	{
 		LOG_ERR("HAL BLE não inicializado");
 		return HAL_BLE_ERROR_STATE;
 	}
 	
-	if (current_state == HAL_BLE_STATE_CONNECTED) 
+	// Não pode fazer advertising se já está conectado
+	if (current_conn != NULL) 
 	{
 		LOG_WRN("Já conectado, não pode iniciar advertising");
 		return HAL_BLE_ERROR_STATE;
 	}
 	
-	if (current_state == HAL_BLE_STATE_ADVERTISING) 
-	{
-		LOG_WRN("Advertising já está ativo");
-		return HAL_BLE_SUCCESS;
-	}
-	
-	// Configura parâmetros de advertising
+	// Configura parâmetros customizados se fornecidos
 	if (adv_params) 
 	{
-		// Valida parâmetros
+		// Validação: intervalos devem estar dentro dos limites da spec
 		if (adv_params->interval_min_ms < ADV_INTERVAL_MIN_MS ||
 		    adv_params->interval_min_ms > ADV_INTERVAL_MAX_MS ||
 		    adv_params->interval_max_ms < ADV_INTERVAL_MIN_MS ||
@@ -358,17 +434,18 @@ int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 			return HAL_BLE_ERROR_INVALID;
 		}
 		
-		// Prepara parâmetros
+		// Monta opções de advertising
 		uint32_t options = 0;
 		if (adv_params->connectable) 
 		{
-			options |= BT_LE_ADV_OPT_CONN;
+			options |= BT_LE_ADV_OPT_CONN;  // Aceita conexões
 		}
 		if (adv_params->use_identity) 
 		{
-			options |= BT_LE_ADV_OPT_USE_IDENTITY;
+			options |= BT_LE_ADV_OPT_USE_IDENTITY;  // Usa endereço MAC fixo
 		}
 		
+		// Preenche estrutura de parâmetros do Zephyr
 		adv_param_storage.id = 0;
 		adv_param_storage.sid = 0;
 		adv_param_storage.secondary_max_skip = 0;
@@ -384,83 +461,15 @@ int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 	} 
 	else 
 	{
-		// Usa parâmetros padrão
+		// Usa parâmetros padrão (serão aplicados em adv_work_handler)
 		adv_param = NULL;
 	}
 	
-	// Inicia advertising via work item (assíncrono)
+	// Submete work item para iniciar advertising de forma assíncrona
+	// Isso permite chamar esta função de qualquer contexto (thread, callback, ISR)
 	k_work_submit(&adv_work);
 	
 	return HAL_BLE_SUCCESS;
-}
-
-int hal_ble_stop_advertising(void)
-{
-	if (!initialized) 
-	{
-		LOG_ERR("HAL BLE não inicializado");
-		return HAL_BLE_ERROR_STATE;
-	}
-	
-	if (current_state != HAL_BLE_STATE_ADVERTISING) 
-	{
-		LOG_WRN("Advertising não está ativo");
-		return HAL_BLE_ERROR_STATE;
-	}
-	
-	int err = bt_le_adv_stop();
-	if (err) 
-	{
-		LOG_ERR("Falha ao parar advertising (err %d)", err);
-		return HAL_BLE_ERROR_FAILED;
-	}
-	
-	current_state = HAL_BLE_STATE_READY;
-	LOG_INF("Advertising parado");
-	
-	// Notifica aplicação
-	if (user_callbacks.adv_stopped) 
-	{
-		user_callbacks.adv_stopped();
-	}
-	
-	return HAL_BLE_SUCCESS;
-}
-
-int hal_ble_disconnect(void)
-{
-	if (!initialized) 
-	{
-		LOG_ERR("HAL BLE não inicializado");
-		return HAL_BLE_ERROR_STATE;
-	}
-	
-	if (!current_conn) 
-	{
-		LOG_ERR("Não há conexão ativa");
-		return HAL_BLE_ERROR_NOT_CONNECTED;
-	}
-	
-	int err = bt_conn_disconnect(current_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
-
-	if (err) 
-	{
-		LOG_ERR("Falha ao desconectar (err %d)", err);
-		return HAL_BLE_ERROR_FAILED;
-	}
-	
-	LOG_INF("Desconexão solicitada");
-	return HAL_BLE_SUCCESS;
-}
-
-hal_ble_state_t hal_ble_get_state(void)
-{
-	return current_state;
-}
-
-bool hal_ble_is_connected(void)
-{
-	return (current_state == HAL_BLE_STATE_CONNECTED && current_conn != NULL);
 }
 
 

@@ -1,23 +1,10 @@
 /*
  * HAL BLE - Hardware Abstraction Layer para Bluetooth Low Energy
- * 
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
-
-/**
- * @file ble.h
- * @brief Interface HAL para funcionalidades Bluetooth Low Energy
- * 
+ *
  * Este módulo encapsula o stack Bluetooth do Zephyr, fornecendo uma API
- * simplificada para inicialização, advertising, conexão e leitura de RSSI.
- * 
- * Funcionalidades:
- * - Inicialização do stack BLE
- * - Controle de advertising (anúncio)
- * - Gerenciamento de conexões
- * - Leitura de RSSI
- * - Callbacks para eventos BLE
+ * simplificada para inicialização, advertising e gerenciamento de conexões.
  */
 
 #ifndef HAL_BLE_H_
@@ -34,85 +21,55 @@ extern "C" {
  * DEFINIÇÕES E TIPOS
  ******************************************************************************/
 
-/**
- * @brief Códigos de erro do HAL BLE
- */
+// Códigos de retorno das funções HAL BLE
 typedef enum {
-	HAL_BLE_SUCCESS = 0,              /**< Operação bem-sucedida */
-	HAL_BLE_ERROR_INIT = -1,          /**< Erro na inicialização */
-	HAL_BLE_ERROR_INVALID = -2,       /**< Parâmetro inválido */
-	HAL_BLE_ERROR_STATE = -3,         /**< Estado inválido */
-	HAL_BLE_ERROR_NOT_CONNECTED = -4, /**< Não há conexão ativa */
-	HAL_BLE_ERROR_FAILED = -5,        /**< Operação falhou */
+	HAL_BLE_SUCCESS = 0,         // Operação bem-sucedida
+	HAL_BLE_ERROR_INIT = -1,     // Erro na inicialização
+	HAL_BLE_ERROR_INVALID = -2,  // Parâmetro inválido
+	HAL_BLE_ERROR_STATE = -3,    // Estado inválido
+	HAL_BLE_ERROR_FAILED = -4,   // Operação falhou
 } hal_ble_error_t;
 
-/**
- * @brief Estados da conexão BLE
- */
-typedef enum {
-	HAL_BLE_STATE_IDLE = 0,           /**< Ocioso (não inicializado) */
-	HAL_BLE_STATE_READY,              /**< Pronto mas não anunciando */
-	HAL_BLE_STATE_ADVERTISING,        /**< Anunciando (advertising) */
-	HAL_BLE_STATE_CONNECTED,          /**< Conectado a um dispositivo */
-} hal_ble_state_t;
-
-/**
- * @brief Parâmetros de advertising
- */
+// Parâmetros de configuração do advertising BLE
+// Define como o dispositivo será anunciado para outros dispositivos
 typedef struct {
-	uint16_t interval_min_ms;         /**< Intervalo mínimo em ms (20-10240) */
-	uint16_t interval_max_ms;         /**< Intervalo máximo em ms (20-10240) */
-	bool connectable;                 /**< Permite conexões */
-	bool use_identity;                /**< Usa endereço de identidade */
+	uint16_t interval_min_ms;  // Intervalo mínimo entre anúncios (20-10240 ms)
+	uint16_t interval_max_ms;  // Intervalo máximo entre anúncios (20-10240 ms)
+	bool connectable;          // true = aceita conexões, false = somente broadcasting
+	bool use_identity;         // true = usa endereço MAC fixo, false = endereço aleatório
 } hal_ble_adv_params_t;
 
-/**
- * @brief Informações de conexão
- */
+// Informações sobre uma conexão BLE estabelecida
+// Contém parâmetros negociados entre dispositivos durante a conexão
 typedef struct {
-	uint16_t interval_ms;             /**< Intervalo de conexão em ms */
-	uint16_t latency;                 /**< Latência de conexão (eventos) */
-	uint16_t timeout_ms;              /**< Timeout de supervisão em ms */
+	uint16_t interval_ms;  // Intervalo entre eventos de conexão (tempo entre trocas de dados)
+	uint16_t latency;      // Número de eventos que o periférico pode pular (economia de energia)
+	uint16_t timeout_ms;   // Tempo máximo sem comunicação antes de considerar conexão perdida
 } hal_ble_conn_info_t;
 
-/*******************************************************************************
- * CALLBACKS
- ******************************************************************************/
+// === CALLBACKS: Funções chamadas automaticamente quando eventos BLE ocorrem ===
 
-/**
- * @brief Callback chamado quando um dispositivo se conecta
- * 
- * @param conn_info Informações sobre a conexão estabelecida
- */
+// Chamado quando um dispositivo central (ex: smartphone) conecta ao nosso periférico
+// conn_info: detalhes da conexão estabelecida (intervalo, latência, timeout)
 typedef void (*hal_ble_connected_cb_t)(const hal_ble_conn_info_t *conn_info);
 
-/**
- * @brief Callback chamado quando um dispositivo se desconecta
- * 
- * @param reason Código do motivo da desconexão
- */
+// Chamado quando a conexão BLE é encerrada (voluntariamente ou por timeout/erro)
+// reason: código HCI indicando motivo da desconexão (ex: 0x13 = usuário encerrou)
 typedef void (*hal_ble_disconnected_cb_t)(uint8_t reason);
 
-/**
- * @brief Callback chamado quando o advertising é iniciado
- */
+// Chamado quando o advertising é iniciado com sucesso
 typedef void (*hal_ble_adv_started_cb_t)(void);
 
-/**
- * @brief Callback chamado quando o advertising é parado
- */
+// Chamado quando o advertising é parado (manualmente ou por conexão estabelecida)
 typedef void (*hal_ble_adv_stopped_cb_t)(void);
 
-/**
- * @brief Estrutura de callbacks BLE
- * 
- * Registre estas funções para receber notificações de eventos BLE
- */
+// Estrutura que agrupa todos os callbacks BLE
+// A aplicação fornece esta estrutura em hal_ble_init() para receber notificações
 typedef struct {
-	hal_ble_connected_cb_t connected;       /**< Callback de conexão */
-	hal_ble_disconnected_cb_t disconnected; /**< Callback de desconexão */
-	hal_ble_adv_started_cb_t adv_started;   /**< Callback advertising iniciado */
-	hal_ble_adv_stopped_cb_t adv_stopped;   /**< Callback advertising parado */
+	hal_ble_connected_cb_t connected;       // Notificação de nova conexão
+	hal_ble_disconnected_cb_t disconnected; // Notificação de desconexão
+	hal_ble_adv_started_cb_t adv_started;   // Notificação de advertising iniciado
+	hal_ble_adv_stopped_cb_t adv_stopped;   // Notificação de advertising parado
 } hal_ble_callbacks_t;
 
 /*******************************************************************************
@@ -120,68 +77,47 @@ typedef struct {
  ******************************************************************************/
 
 /**
- * @brief Inicializa o subsistema BLE
+ * Inicializa o subsistema BLE
  * 
- * Inicializa o stack Bluetooth, configura os serviços GATT e prepara
- * o sistema para advertising e conexões.
+ * Esta função deve ser chamada ANTES de qualquer outra operação BLE.
+ * Ela inicializa o stack Bluetooth do Zephyr, registra callbacks de conexão
+ * e prepara os dados de advertising.
  * 
- * @param device_name Nome do dispositivo para advertising (máx 29 caracteres)
- * @param callbacks Estrutura de callbacks para eventos BLE (pode ser NULL)
+ * Parâmetros:
+ *   device_name: Nome que aparecerá para outros dispositivos (máx 29 caracteres)
+ *   callbacks: Ponteiro para estrutura com funções callback (pode ser NULL)
  * 
- * @return HAL_BLE_SUCCESS em caso de sucesso
- * @return HAL_BLE_ERROR_INIT se houver erro na inicialização
- * @return HAL_BLE_ERROR_INVALID se device_name for NULL ou muito longo
+ * Retorna:
+ *   HAL_BLE_SUCCESS: Inicialização bem-sucedida
+ *   HAL_BLE_ERROR_INIT: Falha ao habilitar Bluetooth
+ *   HAL_BLE_ERROR_INVALID: device_name NULL ou muito longo
+ * 
+ * Exemplo:
+ *   hal_ble_callbacks_t callbacks = { .connected = on_connect, ... };
+ *   hal_ble_init("MeuDispositivo", &callbacks);
  */
 int hal_ble_init(const char *device_name, const hal_ble_callbacks_t *callbacks);
 
 /**
- * @brief Inicia o advertising (anúncio Bluetooth)
+ * Inicia o advertising BLE (torna o dispositivo visível/conectável)
  * 
- * Torna o dispositivo visível e conectável para outros dispositivos BLE.
- * Use parâmetros padrão se adv_params for NULL.
+ * Após inicializar o BLE, chame esta função para começar a anunciar o dispositivo.
+ * O advertising permite que outros dispositivos (smartphones, tablets) descubram
+ * e conectem-se ao nosso periférico.
  * 
- * @param adv_params Parâmetros de advertising (NULL usa valores padrão)
+ * Parâmetros:
+ *   adv_params: Configurações de advertising ou NULL para usar padrões (500ms)
  * 
- * @return HAL_BLE_SUCCESS em caso de sucesso
- * @return HAL_BLE_ERROR_STATE se BLE não foi inicializado
- * @return HAL_BLE_ERROR_FAILED se falhar ao iniciar advertising
+ * Retorna:
+ *   HAL_BLE_SUCCESS: Advertising iniciado com sucesso
+ *   HAL_BLE_ERROR_STATE: BLE não inicializado ou já conectado
+ *   HAL_BLE_ERROR_INVALID: Parâmetros inválidos
+ *   HAL_BLE_ERROR_FAILED: Falha ao iniciar advertising no stack
+ * 
+ * Nota: O advertising para automaticamente quando uma conexão é estabelecida.
+ *       Use o callback adv_stopped para detectar quando isso ocorre.
  */
 int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params);
-
-/**
- * @brief Para o advertising
- * 
- * Para de anunciar o dispositivo. Não afeta conexões já estabelecidas.
- * 
- * @return HAL_BLE_SUCCESS em caso de sucesso
- * @return HAL_BLE_ERROR_STATE se advertising não estava ativo
- */
-int hal_ble_stop_advertising(void);
-
-/**
- * @brief Desconecta do dispositivo conectado
- * 
- * Encerra a conexão BLE atual e retorna ao modo pronto.
- * 
- * @return HAL_BLE_SUCCESS em caso de sucesso
- * @return HAL_BLE_ERROR_NOT_CONNECTED se não há conexão ativa
- */
-int hal_ble_disconnect(void);
-
-/**
- * @brief Retorna o estado atual do BLE
- * 
- * @return Estado atual do subsistema BLE
- */
-hal_ble_state_t hal_ble_get_state(void);
-
-/**
- * @brief Verifica se há uma conexão ativa
- * 
- * @return true se conectado a um dispositivo
- * @return false se não há conexão
- */
-bool hal_ble_is_connected(void);
 
 
 #ifdef __cplusplus

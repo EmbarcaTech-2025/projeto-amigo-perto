@@ -1,21 +1,10 @@
 /*
  * HAL Battery - Hardware Abstraction Layer para monitoramento de bateria
- */
-
-/**
- * @file battery.h
- * @brief Interface HAL para leitura e monitoramento de bateria via ADC
- * 
- * Este módulo encapsula a lógica de leitura da tensão da bateria através do ADC,
- * gerenciamento de estados de carga e fornecimento de informações de nível de bateria
- * para a aplicação.
- * 
- * Funcionalidades:
- * - Inicialização do subsistema de monitoramento de bateria
- * - Leitura da tensão da bateria via ADC
- * - Cálculo do percentual de carga
- * - Gerenciamento de estados de carga (Critical, Low, Medium, Good)
- * - Otimizado para bateria tipo moeda (CR2032: 3.0V nominal, 2.0V mínimo)
+ * Copyright (c) 2025
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Interface simplificada para leitura do percentual de carga da bateria LiPo.
+ * Usa o canal interno SAADC_VDD do nRF52840 para medir a tensão de alimentação.
  */
 
 #ifndef HAL_BATTERY_H_
@@ -28,115 +17,72 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-/**
- * @brief Códigos de erro do HAL Battery
- */
+// Códigos de retorno das funções HAL Battery
 typedef enum {
-	HAL_BATTERY_SUCCESS = 0,          /**< Operação bem-sucedida */
-	HAL_BATTERY_ERROR_INIT = -1,      /**< Erro na inicialização */
-	HAL_BATTERY_ERROR_READ = -2,      /**< Erro na leitura do ADC */
-	HAL_BATTERY_ERROR_STATE = -3,     /**< Estado inválido (não inicializado) */
+	HAL_BATTERY_SUCCESS = 0,     // Operação bem-sucedida
+	HAL_BATTERY_ERROR_INIT = -1, // Erro na inicialização do ADC
+	HAL_BATTERY_ERROR_READ = -2, // Erro ao ler ADC
 } hal_battery_error_t;
 
-/**
- * @brief Estados de carga da bateria
- * 
- * Baseado em CR2032:
- * - 3.0V: 100% (tensão nominal)
- * - 2.8V: ~75% (good)
- * - 2.5V: ~25% (low)
- * - 2.0V: ~5% (critical)
- * - <2.0V: bateria esgotada
- */
-typedef enum {
-	HAL_BATTERY_STATE_CRITICAL = 0,   /**< Crítico: < 10% (< 2.2V) */
-	HAL_BATTERY_STATE_LOW = 1,        /**< Baixo: 10-30% (2.2V - 2.5V) */
-	HAL_BATTERY_STATE_MEDIUM = 2,     /**< Médio: 30-70% (2.5V - 2.8V) */
-	HAL_BATTERY_STATE_GOOD = 3,       /**< Bom: > 70% (> 2.8V) */
-	HAL_BATTERY_STATE_UNKNOWN = 4,    /**< Desconhecido (não inicializado ou erro) */
-} hal_battery_state_t;
+// === API PÚBLICA ===
 
 /**
- * @brief Estrutura com informações da bateria
- */
-typedef struct {
-	uint16_t voltage_mv;              /**< Tensão em milivolts */
-	uint8_t percentage;               /**< Percentual de carga (0-100%) */
-	hal_battery_state_t state;        /**< Estado de carga */
-} hal_battery_info_t;
-
-/**
- * @brief Inicializa o subsistema de monitoramento de bateria
+ * Inicializa o módulo de monitoramento de bateria
  * 
- * Configura o ADC para leitura da tensão de bateria e prepara o módulo
- * para operação. Deve ser chamada antes de qualquer outra função do HAL.
+ * Configura o ADC do nRF52840 para ler o canal interno VDD (tensão de alimentação).
+ * Esta função deve ser chamada antes de usar hal_battery_get_percentage().
  * 
- * @return HAL_BATTERY_SUCCESS em caso de sucesso
- * @return HAL_BATTERY_ERROR_INIT se houver erro na inicialização
+ * Retorna:
+ *   HAL_BATTERY_SUCCESS: Inicialização bem-sucedida
+ *   HAL_BATTERY_ERROR_INIT: Falha ao configurar ADC
+ * 
+ * Exemplo:
+ *   if (hal_battery_init() == HAL_BATTERY_SUCCESS) {
+ *       uint8_t level = hal_battery_get_percentage();
+ *   }
  */
 int hal_battery_init(void);
 
 /**
- * @brief Lê a tensão atual da bateria
+ * Lê o percentual de carga da bateria LiPo
  * 
- * Realiza uma leitura do ADC e retorna a tensão em milivolts.
- * Esta função realiza múltiplas leituras e calcula a média para maior precisão.
+ * Realiza leitura do ADC com oversampling (múltiplas leituras para maior precisão),
+ * converte a tensão medida em percentual de carga baseado na curva de descarga
+ * da bateria LiPo 1S usando interpolação linear em 11 pontos.
  * 
- * @param voltage_mv Ponteiro para armazenar a tensão lida (em mV)
+ * Retorna:
+ *   0-100: Percentual de carga da bateria
+ *   0: Se não inicializado ou erro na leitura
  * 
- * @return HAL_BATTERY_SUCCESS em caso de sucesso
- * @return HAL_BATTERY_ERROR_STATE se não inicializado
- * @return HAL_BATTERY_ERROR_READ se houver erro na leitura
+ * Curva de conversão (11 pontos):
+ *   - 4.20V = 100% | 4.11V = 90% | 4.02V = 80% | 3.93V = 70%
+ *   - 3.84V = 60%  | 3.75V = 50% | 3.66V = 40% | 3.57V = 30%
+ *   - 3.48V = 20%  | 3.39V = 10% | 3.30V = 0%
+ * 
+ * Nota: A leitura leva ~20ms devido ao oversampling e estabilização do circuito.
  */
-int hal_battery_read_voltage(uint16_t *voltage_mv);
+uint8_t hal_battery_get_percentage(void);
 
 /**
- * @brief Calcula o percentual de carga da bateria
+ * Lê a tensão da bateria em milivolts
  * 
- * Converte a tensão em mV para percentual de carga estimado (0-100%).
- * Utiliza interpolação linear baseada nas características de descarga
- * de bateria tipo moeda (CR2032).
+ * Realiza leitura do ADC com oversampling e retorna a tensão bruta em mV.
+ * Útil para depuração ou quando é necessário o valor exato de tensão.
  * 
- * @param voltage_mv Tensão da bateria em milivolts
+ * Parâmetros:
+ *   battery_millivolt: Ponteiro para armazenar a tensão em mV
  * 
- * @return Percentual de carga (0-100%)
+ * Retorna:
+ *   0: Sucesso
+ *   Negativo: Código de erro (ver hal_battery_error_t)
+ * 
+ * Exemplo:
+ *   uint16_t voltage_mv;
+ *   if (hal_battery_get_millivolt(&voltage_mv) == 0) {
+ *       printk("Bateria: %d mV\n", voltage_mv);
+ *   }
  */
-uint8_t hal_battery_voltage_to_percentage(uint16_t voltage_mv);
-
-/**
- * @brief Determina o estado de carga da bateria
- * 
- * Converte o percentual de carga em estado categórico.
- * 
- * @param percentage Percentual de carga (0-100%)
- * 
- * @return Estado de carga da bateria
- */
-hal_battery_state_t hal_battery_percentage_to_state(uint8_t percentage);
-
-/**
- * @brief Obtém informações completas da bateria
- * 
- * Lê a tensão da bateria e calcula todas as informações derivadas
- * (percentual e estado) em uma única operação.
- * 
- * @param info Ponteiro para estrutura onde as informações serão armazenadas
- * 
- * @return HAL_BATTERY_SUCCESS em caso de sucesso
- * @return HAL_BATTERY_ERROR_STATE se não inicializado
- * @return HAL_BATTERY_ERROR_READ se houver erro na leitura
- */
-int hal_battery_get_info(hal_battery_info_t *info);
-
-/**
- * @brief Verifica se a bateria está em nível crítico
- * 
- * Função auxiliar para verificação rápida de bateria crítica.
- * 
- * @return true se bateria está crítica (< 10%)
- * @return false caso contrário ou se não inicializado
- */
-bool hal_battery_is_critical(void);
+int hal_battery_get_millivolt(uint16_t *battery_millivolt);
 
 #ifdef __cplusplus
 }

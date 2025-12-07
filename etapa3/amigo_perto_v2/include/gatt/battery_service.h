@@ -1,22 +1,16 @@
 /*
- * GATT Battery Service - Serviço BLE para monitoramento de bateria
- */
-
-/**
- * @file battery_service.h
- * @brief Interface do serviço GATT de bateria
- * 
- * Este módulo implementa o Battery Service padrão do Bluetooth (UUID 0x180F)
- * com a característica Battery Level (UUID 0x2A19), permitindo que aplicativos
- * móveis leiam o nível da bateria.
- * 
- * Características:
- * - Battery Level: Leitura e notificação do percentual de bateria (0-100%)
- * - Battery Voltage: Leitura da tensão em mV (customizado)
- * - Battery State: Leitura do estado (Critical, Low, Medium, Good) (customizado)
- * 
- * Compatível com Android, iOS e outros dispositivos BLE que suportam
- * o Battery Service padrão.
+ * GATT Battery Service - Serviço BLE padrão para monitoramento de bateria
+ * Copyright (c) 2025
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Implementação simplificada do Battery Service padrão Bluetooth SIG (UUID 0x180F)
+ * com apenas a característica Battery Level (UUID 0x2A19) para leitura de percentual.
+ *
+ * Características implementadas:
+ * - Battery Level (0x2A19): Leitura e notificação do percentual (0-100%)
+ *
+ * Compatível com Android, iOS e qualquer dispositivo que suporte o Battery Service.
+ * O percentual é obtido diretamente do HAL Battery (hal_battery_get_percentage).
  */
 
 #ifndef GATT_BATTERY_SERVICE_H_
@@ -43,52 +37,35 @@ struct gatt_battery_service_cb {
 	 * quando a bateria é consultada.
 	 * 
 	 * @param percentage Percentual de bateria lido (0-100%)
+	 * @param voltage_mv Tensão da bateria em milivolts
 	 */
-	void (*battery_read_cb)(uint8_t percentage);
+	void (*battery_read_cb)(uint8_t percentage, uint16_t voltage_mv);
 };
 
+// === API PÚBLICA ===
+
 /**
- * @brief Inicializa o serviço GATT de bateria
- * 
- * Registra o Battery Service e suas características no stack BLE.
- * Deve ser chamado após a inicialização do BLE e antes de iniciar advertising.
- * 
- * @param callbacks Estrutura de callbacks (pode ser NULL se não usar)
- * 
+ * Inicializa o Battery Service GATT
+ *
+ * Registra o Battery Service padrão (0x180F) no stack BLE com a característica
+ * Battery Level (0x2A19) configurada para leitura.
+ *
+ * Deve ser chamado após hal_ble_init() e antes de hal_ble_start_advertising().
+ *
+ * Comportamento:
+ * - Lê valor inicial da bateria via hal_battery_get_percentage()
+ * - Registra callback para leitura remota via BLE
+ * - Permite que clientes BLE leiam o percentual sob demanda
+ *
+ * @param callbacks Estrutura de callbacks (pode ser NULL se não precisar de notificações)
+ *
  * @return 0 em caso de sucesso
  * @return Código de erro negativo em caso de falha
+ *
+ * Exemplo:
+ *   gatt_battery_service_init(&battery_callbacks);
  */
 int gatt_battery_service_init(const struct gatt_battery_service_cb *callbacks);
-
-/**
- * @brief Envia notificação de mudança no nível de bateria
- * 
- * Envia notificação BLE aos clientes conectados que habilitaram
- * notificações da característica Battery Level.
- * 
- * Esta função deve ser chamada quando o nível da bateria mudar
- * significativamente (ex: a cada 5% de mudança).
- * 
- * @param percentage Novo percentual de bateria (0-100%)
- * 
- * @return 0 em caso de sucesso
- * @return Código de erro negativo se não houver clientes conectados
- *         ou se notificações não estiverem habilitadas
- */
-int gatt_battery_service_notify(uint8_t percentage);
-
-/**
- * @brief Atualiza o valor da bateria sem enviar notificação
- * 
- * Atualiza o valor interno da característica Battery Level sem enviar
- * notificação aos clientes. Útil para atualizar o valor antes que
- * um cliente leia.
- * 
- * @param percentage Percentual de bateria (0-100%)
- * 
- * @return 0 em caso de sucesso
- */
-int gatt_battery_service_update(uint8_t percentage);
 
 #ifdef __cplusplus
 }

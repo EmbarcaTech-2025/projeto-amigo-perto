@@ -1,302 +1,212 @@
 /*
- * GATT Battery Service - Serviço BLE para monitoramento de bateria
- * 
- * @file battery_service.c
- * @brief Implementação do serviço GATT de bateria
- * Localização: src/gatt/battery_service.c
- * Header público: include/gatt/battery_service.h
- * 
- * Implementa o Battery Service padrão do Bluetooth (0x180F) com características
- * customizadas adicionais para informações detalhadas da bateria.
- * 
- * Características implementadas:
- * - Battery Level (0x2A19) - Padrão Bluetooth SIG (Read + Notify)
- * - Battery Voltage (custom 128-bit UUID) - Tensão em mV (Read)
- * - Battery State (custom 128-bit UUID) - Estado da bateria (Read)
- * 
+ * GATT Battery Service - Serviço BLE padrão para monitoramento de bateria
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *
+ * Implementação simplificada do Battery Service padrão Bluetooth SIG (UUID 0x180F).
+ * Fornece apenas a característica Battery Level (UUID 0x2A19) para leitura de percentual.
+ *
+ * Características:
+ * - Battery Level (0x2A19): Read-only, retorna percentual 0-100%
+ *
+ * Integração:
+ * - Usa hal_battery_get_percentage() para obter o valor atual
+ * - Notifica aplicação via callback quando cliente lê o valor
+ * - Valor é sempre atualizado em tempo real a cada leitura
  */
 
+// === INCLUDES ===
 #include "gatt/battery_service.h"
 #include "hal/battery.h"
 
-// Zephyr includes
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/conn.h>
 
-// Registra módulo de logging
 LOG_MODULE_REGISTER(gatt_battery, LOG_LEVEL_DBG);
 
-/*******************************************************************************
- * DEFINIÇÕES DE UUIDs
- ******************************************************************************/
+// === UUIDs PADRÃO BLUETOOTH SIG ===
+// Battery Service (0x180F) e Battery Level (0x2A19)
+// Definidos em <zephyr/bluetooth/uuid.h>:
+// - BT_UUID_BAS: Battery Service
+// - BT_UUID_BAS_BATTERY_LEVEL: Battery Level Characteristic
 
-// Battery Service e Battery Level padrão já definidos em <zephyr/bluetooth/uuid.h>
-// Usar BT_UUID_BAS e BT_UUID_BAS_BATTERY_LEVEL diretamente
+// === VARIÁVEIS PRIVADAS ===
 
-// UUIDs customizados para informações adicionais
-// Base UUID: 00001000-8e22-4541-9d4c-21edae82ed19
-#define BT_UUID_BATTERY_VOLTAGE_VAL \
-	BT_UUID_128_ENCODE(0x00001001, 0x8e22, 0x4541, 0x9d4c, 0x21edae82ed19)
-#define BT_UUID_BATTERY_VOLTAGE \
-	BT_UUID_DECLARE_128(BT_UUID_BATTERY_VOLTAGE_VAL)
-
-#define BT_UUID_BATTERY_STATE_VAL \
-	BT_UUID_128_ENCODE(0x00001002, 0x8e22, 0x4541, 0x9d4c, 0x21edae82ed19)
-#define BT_UUID_BATTERY_STATE \
-	BT_UUID_DECLARE_128(BT_UUID_BATTERY_STATE_VAL)
-
-/*******************************************************************************
- * VARIÁVEIS PRIVADAS
- ******************************************************************************/
-
-// Callbacks da aplicação
+// Callbacks da aplicação (opcional)
 static const struct gatt_battery_service_cb *app_callbacks = NULL;
 
-// Valores das características
-static uint8_t battery_level = 0;      // Percentual (0-100%)
-static uint16_t battery_voltage = 0;   // Tensão em mV
-static uint8_t battery_state = 0;      // Estado (0-4)
+// Cache do último valor lido (para evitar leituras ADC repetidas muito próximas)
+static uint8_t battery_level_cache = 0;
+static uint16_t battery_voltage_cache = 0;
 
-// Conexão atual para notificações
-static struct bt_conn *current_conn = NULL;
-
-// Flag de notificação habilitada
-static bool notify_enabled = false;
-
-/*******************************************************************************
- * FUNÇÕES DE LEITURA DAS CARACTERÍSTICAS
- ******************************************************************************/
+// === CALLBACKS GATT ===
 
 /**
- * @brief Lê o nível da bateria (padrão Bluetooth)
+ * Callback: Leitura da característica Battery Level
+ *
+ * Chamado automaticamente pelo stack BLE quando um cliente remoto (smartphone)
+ * lê a característica Battery Level (0x2A19).
+ *
+ * Fluxo:
+ * 1. Lê percentual atual via hal_battery_get_percentage()
+ * 2. Lê tensão em mV via hal_battery_get_millivolt()
+ * 3. Atualiza cache local
+ * 4. Notifica aplicação via callback (se registrado)
+ * 5. Retorna valor ao cliente BLE
+ *
+ * @param conn Conexão BLE que solicitou a leitura
+ * @param attr Atributo GATT sendo lido
+ * @param buf Buffer para armazenar o valor
+ * @param len Tamanho do buffer
+ * @param offset Offset de leitura (sempre 0 para Battery Level)
+ *
+ * @return Número de bytes lidos, ou código de erro negativo
  */
 static ssize_t read_battery_level(struct bt_conn *conn,
                                    const struct bt_gatt_attr *attr,
                                    void *buf, uint16_t len, uint16_t offset)
 {
-	// Atualiza valor lendo do HAL
-	hal_battery_info_t info;
-	int err = hal_battery_get_info(&info);
+	// Lê valor atual da bateria via HAL
+	// Esta função já faz oversampling do ADC e conversão para percentual
+	battery_level_cache = hal_battery_get_percentage();
 	
-	if (err == HAL_BATTERY_SUCCESS) {
-		battery_level = info.percentage;
-		LOG_DBG("Leitura Battery Level: %d%%", battery_level);
-		
-		// Notifica aplicação
-		if (app_callbacks && app_callbacks->battery_read_cb) {
-			app_callbacks->battery_read_cb(battery_level);
-		}
-	} else {
-		LOG_ERR("Erro ao ler bateria para GATT (err %d)", err);
+	// Lê tensão da bateria em milivolts
+	hal_battery_get_millivolt(&battery_voltage_cache);
+	
+	LOG_DBG("Cliente leu Battery Level: %d%% (%dmV)", battery_level_cache, battery_voltage_cache);
+	
+	// Notifica aplicação se callback foi registrado
+	if (app_callbacks && app_callbacks->battery_read_cb) {
+		app_callbacks->battery_read_cb(battery_level_cache, battery_voltage_cache);
 	}
 	
+	// Retorna valor ao cliente BLE (1 byte: 0-100%)
 	return bt_gatt_attr_read(conn, attr, buf, len, offset,
-	                         &battery_level, sizeof(battery_level));
+	                         &battery_level_cache, sizeof(battery_level_cache));
 }
 
 /**
- * @brief Lê a tensão da bateria (customizado)
+ * Callback: Leitura da característica Battery Voltage (customizada)
+ *
+ * Fornece a tensão da bateria em milivolts como uint16_t (2 bytes).
+ * Útil para diagnóstico e monitoramento mais preciso do que apenas o percentual.
+ *
+ * @param conn Conexão BLE que solicitou a leitura
+ * @param attr Atributo GATT sendo lido
+ * @param buf Buffer para armazenar o valor
+ * @param len Tamanho do buffer
+ * @param offset Offset de leitura
+ *
+ * @return Número de bytes lidos, ou código de erro negativo
  */
 static ssize_t read_battery_voltage(struct bt_conn *conn,
                                      const struct bt_gatt_attr *attr,
                                      void *buf, uint16_t len, uint16_t offset)
 {
-	// Atualiza valor lendo do HAL
-	hal_battery_info_t info;
-	int err = hal_battery_get_info(&info);
+	LOG_DBG("Cliente leu Battery Voltage: %dmV", battery_voltage_cache);
 	
-	if (err == HAL_BATTERY_SUCCESS) {
-		battery_voltage = info.voltage_mv;
-		LOG_DBG("Leitura Battery Voltage: %d mV", battery_voltage);
-	} else {
-		LOG_ERR("Erro ao ler tensão da bateria (err %d)", err);
-	}
-	
+	// Retorna tensão ao cliente BLE (2 bytes: milivolts)
 	return bt_gatt_attr_read(conn, attr, buf, len, offset,
-	                         &battery_voltage, sizeof(battery_voltage));
+	                         &battery_voltage_cache, sizeof(battery_voltage_cache));
 }
+
+// UUID customizado (128-bit) para Battery Voltage em milivolts
+// Base UUID: 00000000-0000-1000-8000-00805F9B34FB (Bluetooth SIG base)
+// Customizado: 00002A19-0000-1000-8000-00805F9B34FB (derivado de Battery Level)
+// Modificado: 00002B19-0000-1000-8000-00805F9B34FB (offset para voltage)
+#define BT_UUID_BATTERY_VOLTAGE \
+	BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0x00002B19, 0x0000, 0x1000, 0x8000, 0x00805F9B34FB))
+
+// Presentation Format Descriptor para Battery Voltage
+// Define o formato de exibição: uint16, unidade = volt (com expoente -3 = milivolts)
+static struct bt_gatt_cpf voltage_format = {
+	.format = 0x06,        // uint16
+	.exponent = -3,        // 10^-3 = mili (valor × 0.001 = volts)
+	.unit = 0x2728,        // UUID da unidade: Electric Potential Difference (volt)
+	.name_space = 0x01,    // Bluetooth SIG namespace
+	.description = 0x0000, // Sem descrição adicional
+};
+
+// === DEFINIÇÃO DO SERVIÇO GATT ===
 
 /**
- * @brief Lê o estado da bateria (customizado)
+ * Battery Service GATT Definition
+ *
+ * Serviço padrão Bluetooth SIG para monitoramento de bateria.
+ * Reconhecido automaticamente por Android, iOS e outros sistemas operacionais.
+ *
+ * Estrutura:
+ * - Service UUID: 0x180F (Battery Service)
+ *   - Characteristic UUID: 0x2A19 (Battery Level)
+ *     - Properties: Read
+ *     - Permissions: Read
+ *     - Format: uint8 (0-100%)
+ *     - Callback: read_battery_level()
+ *   - Characteristic UUID: 00002B19-...-34FB (Battery Voltage - customizada)
+ *     - Properties: Read
+ *     - Permissions: Read
+ *     - Format: uint16 (milivolts)
+ *     - Callback: read_battery_voltage()
+ *
+ * Nota: Não implementa notificações (CCC) pois a leitura sob demanda
+ * é suficiente para a maioria dos casos de uso e economiza energia.
  */
-static ssize_t read_battery_state(struct bt_conn *conn,
-                                   const struct bt_gatt_attr *attr,
-                                   void *buf, uint16_t len, uint16_t offset)
-{
-	// Atualiza valor lendo do HAL
-	hal_battery_info_t info;
-	int err = hal_battery_get_info(&info);
-	
-	if (err == HAL_BATTERY_SUCCESS) {
-		battery_state = (uint8_t)info.state;
-		LOG_DBG("Leitura Battery State: %d", battery_state);
-	} else {
-		LOG_ERR("Erro ao ler estado da bateria (err %d)", err);
-	}
-	
-	return bt_gatt_attr_read(conn, attr, buf, len, offset,
-	                         &battery_state, sizeof(battery_state));
-}
-
-/*******************************************************************************
- * FUNÇÕES DE CCC (Client Characteristic Configuration)
- ******************************************************************************/
-
-/**
- * @brief Callback quando cliente habilita/desabilita notificações
- */
-static void battery_level_ccc_changed(const struct bt_gatt_attr *attr,
-                                       uint16_t value)
-{
-	notify_enabled = (value == BT_GATT_CCC_NOTIFY);
-	
-	LOG_INF("Notificações de bateria %s",
-	        notify_enabled ? "HABILITADAS" : "DESABILITADAS");
-}
-
-/*******************************************************************************
- * DEFINIÇÃO DO SERVIÇO GATT
- ******************************************************************************/
-
-// Definição do Battery Service
 BT_GATT_SERVICE_DEFINE(battery_svc,
-	// Primary Service: Battery Service (0x180F)
+	// Primary Service: Battery Service (UUID 0x180F)
 	BT_GATT_PRIMARY_SERVICE(BT_UUID_BAS),
 	
-	// Characteristic: Battery Level (0x2A19)
-	// Propriedades: Read + Notify
+	// Characteristic: Battery Level (UUID 0x2A19)
+	// Propriedades: Read (leitura sob demanda pelo cliente)
+	// Permissões: Read (qualquer cliente conectado pode ler)
+	// Callbacks: read_battery_level (read), NULL (write), NULL (value)
 	BT_GATT_CHARACTERISTIC(BT_UUID_BAS_BATTERY_LEVEL,
-	                       BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+	                       BT_GATT_CHRC_READ,
 	                       BT_GATT_PERM_READ,
 	                       read_battery_level, NULL, NULL),
 	
-	// CCC Descriptor para notificações
-	BT_GATT_CCC(battery_level_ccc_changed,
-	            BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
-	
-	// Characteristic: Battery Voltage (customizado)
-	// Propriedades: Read
+	// Characteristic: Battery Voltage (UUID 0x2B19 - customizada)
+	// Propriedades: Read (leitura sob demanda pelo cliente)
+	// Permissões: Read (qualquer cliente conectado pode ler)
+	// Callbacks: read_battery_voltage (read), NULL (write), NULL (value)
+	// Descriptor: Presentation Format (indica formato uint16 + unidade volt com expoente -3)
 	BT_GATT_CHARACTERISTIC(BT_UUID_BATTERY_VOLTAGE,
 	                       BT_GATT_CHRC_READ,
 	                       BT_GATT_PERM_READ,
 	                       read_battery_voltage, NULL, NULL),
-	
-	// Characteristic: Battery State (customizado)
-	// Propriedades: Read
-	BT_GATT_CHARACTERISTIC(BT_UUID_BATTERY_STATE,
-	                       BT_GATT_CHRC_READ,
-	                       BT_GATT_PERM_READ,
-	                       read_battery_state, NULL, NULL),
+	BT_GATT_CPF(&voltage_format),
 );
 
-/*******************************************************************************
- * CALLBACKS DE CONEXÃO
- ******************************************************************************/
+
+
+// === API PÚBLICA ===
 
 /**
- * @brief Callback de conexão BLE
+ * Inicializa o Battery Service GATT
+ *
+ * Registra o serviço no stack BLE e faz leitura inicial da bateria.
+ * O serviço fica disponível automaticamente após inicialização do BLE.
+ *
+ * @param callbacks Estrutura de callbacks (opcional, pode ser NULL)
+ * @return 0 sempre (sucesso)
  */
-static void connected_cb(struct bt_conn *conn, uint8_t err)
-{
-	if (err) {
-		LOG_ERR("Falha na conexão (err %u)", err);
-		return;
-	}
-	
-	// Armazena conexão para notificações
-	if (current_conn) {
-		bt_conn_unref(current_conn);
-	}
-	current_conn = bt_conn_ref(conn);
-	
-	LOG_DBG("Cliente BLE conectado");
-}
-
-/**
- * @brief Callback de desconexão BLE
- */
-static void disconnected_cb(struct bt_conn *conn, uint8_t reason)
-{
-	LOG_DBG("Cliente BLE desconectado (razão %u)", reason);
-	
-	if (current_conn) {
-		bt_conn_unref(current_conn);
-		current_conn = NULL;
-	}
-	
-	notify_enabled = false;
-}
-
-// Estrutura de callbacks de conexão
-BT_CONN_CB_DEFINE(battery_conn_callbacks) = {
-	.connected = connected_cb,
-	.disconnected = disconnected_cb,
-};
-
-/*******************************************************************************
- * API PÚBLICA
- ******************************************************************************/
-
 int gatt_battery_service_init(const struct gatt_battery_service_cb *callbacks)
 {
+	// Armazena callbacks da aplicação (se fornecidos)
 	app_callbacks = callbacks;
 	
-	// Lê valor inicial da bateria
-	hal_battery_info_t info;
-	int err = hal_battery_get_info(&info);
+	// Lê valor inicial da bateria para popular o cache
+	battery_level_cache = hal_battery_get_percentage();
+	hal_battery_get_millivolt(&battery_voltage_cache);
 	
-	if (err == HAL_BATTERY_SUCCESS) {
-		battery_level = info.percentage;
-		battery_voltage = info.voltage_mv;
-		battery_state = (uint8_t)info.state;
-		
-		LOG_INF("Battery Service inicializado");
-		LOG_INF("  Nível: %d%%", battery_level);
-		LOG_INF("  Tensão: %d mV", battery_voltage);
-		LOG_INF("  Estado: %d", battery_state);
-	} else {
-		LOG_WRN("Battery Service inicializado, mas leitura inicial falhou");
-	}
+	LOG_INF("Battery Service inicializado");
+	LOG_INF("  Nível inicial: %d%% (%dmV)", battery_level_cache, battery_voltage_cache);
+	LOG_INF("  UUID Service: 0x180F");
+	LOG_INF("  UUID Characteristics:");
+	LOG_INF("    - Battery Level: 0x2A19 (percentual)");
+	LOG_INF("    - Battery Voltage: 00002B19-...-34FB (milivolts)");
 	
-	return 0;
-}
-
-int gatt_battery_service_notify(uint8_t percentage)
-{
-	if (!current_conn) {
-		LOG_DBG("Nenhum cliente conectado para notificar");
-		return -ENOTCONN;
-	}
-	
-	if (!notify_enabled) {
-		LOG_DBG("Notificações não habilitadas pelo cliente");
-		return -EACCES;
-	}
-	
-	battery_level = percentage;
-	
-	int err = bt_gatt_notify(current_conn, &battery_svc.attrs[1],
-	                         &battery_level, sizeof(battery_level));
-	
-	if (err) {
-		LOG_ERR("Falha ao enviar notificação (err %d)", err);
-		return err;
-	}
-	
-	LOG_DBG("Notificação de bateria enviada: %d%%", percentage);
-	
-	return 0;
-}
-
-int gatt_battery_service_update(uint8_t percentage)
-{
-	battery_level = percentage;
-	LOG_DBG("Valor de bateria atualizado: %d%%", percentage);
 	return 0;
 }
