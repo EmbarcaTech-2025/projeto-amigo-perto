@@ -16,11 +16,13 @@ target_sources(app PRIVATE
   src/hal/ble.c
   src/gatt/buzzer_service.c
   src/gatt/battery_service.c
+  src/test/energy_test.c
 )
 
 zephyr_library_include_directories(
   include
   include/hal
   include/gatt
+  include/test
 )
 # NORDIC SDK APP END

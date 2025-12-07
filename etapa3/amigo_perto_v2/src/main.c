@@ -42,6 +42,11 @@
 #include "gatt/buzzer_service.h"   // Serviço GATT customizado do buzzer
 #include "gatt/battery_service.h"  // Serviço GATT padrão de bateria (0x180F)
 
+// === MÓDULO DE TESTE DE ENERGIA ===
+#ifdef CONFIG_ENERGY_TEST
+#include "test/energy_test.h"
+#endif
+
 // Registra módulo de logging
 LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 
@@ -384,6 +389,65 @@ int main(void)
 	LOG_INF("  - Azul: Advertising ativo");
 	LOG_INF("  - Verde: Conectado");
 	LOG_INF("=============================================");
+	
+#ifdef CONFIG_ENERGY_TEST
+	// === MODO DE TESTE DE ENERGIA ===
+	LOG_INF("");
+	LOG_INF("========================================");
+	LOG_INF("  MODO DE TESTE DE ENERGIA ATIVADO");
+	LOG_INF("========================================");
+	
+	// Inicializa módulo de teste
+	err = energy_test_init();
+	if (err != ENERGY_TEST_SUCCESS)
+	{
+		LOG_ERR("Falha ao inicializar teste de energia: %d", err);
+	}
+	else
+	{
+		// Aguarda 5 segundos antes de iniciar
+		LOG_INF("Iniciando testes em 5 segundos...");
+		k_sleep(K_SECONDS(5));
+		
+		// Teste 1: Baseline (sem buzzer)
+		energy_test_results_t baseline_results;
+		energy_test_run_baseline(&baseline_results);
+		
+		// Aguarda 10 segundos entre testes
+		LOG_INF("");
+		LOG_INF("Aguardando 10 segundos...");
+		k_sleep(K_SECONDS(10));
+		
+		// Teste 2: Com buzzer
+		energy_test_results_t buzzer_results;
+		energy_test_run_with_buzzer(&buzzer_results);
+		
+		// Análise comparativa
+		LOG_INF("");
+		LOG_INF("========================================");
+		LOG_INF("  ANÁLISE COMPARATIVA");
+		LOG_INF("========================================");
+		
+		float buzzer_overhead_mwh = buzzer_results.energy_mwh - baseline_results.energy_mwh;
+		float buzzer_overhead_pct = (baseline_results.energy_mwh > 0) ? 
+		                            (buzzer_overhead_mwh / baseline_results.energy_mwh * 100.0f) : 0.0f;
+		
+		LOG_INF("Consumo baseline: %.6f mWh/min", (double)baseline_results.energy_mwh);
+		LOG_INF("Consumo com buzzer: %.6f mWh/min", (double)buzzer_results.energy_mwh);
+		LOG_INF("Overhead do buzzer: %.6f mWh/min (+%.1f%%)", 
+		        (double)buzzer_overhead_mwh, (double)buzzer_overhead_pct);
+		LOG_INF("");
+		LOG_INF("Projeção horária:");
+		LOG_INF("  - Baseline: %.3f mWh/h", (double)baseline_results.energy_mwh * 60.0);
+		LOG_INF("  - Com buzzer: %.3f mWh/h", (double)buzzer_results.energy_mwh * 60.0);
+		LOG_INF("  - Overhead: %.3f mWh/h", (double)buzzer_overhead_mwh * 60.0);
+		
+		LOG_INF("");
+		LOG_INF("=== TESTES CONCLUÍDOS ===");
+		LOG_INF("Retornando ao modo normal...");
+		LOG_INF("");
+	}
+#endif
 	
 	// Loop infinito - sistema controlado por eventos via callbacks
 	while (1) 

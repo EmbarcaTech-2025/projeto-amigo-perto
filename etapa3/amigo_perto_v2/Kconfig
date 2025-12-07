@@ -1,0 +1,16 @@
+#
+# Copyright (c) 2025
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+mainmenu "Amigo Perto Application Configuration"
+
+config ENERGY_TEST
+	bool "Enable Energy Consumption Test Module"
+	default y
+	help
+	  Enable the energy consumption test module that measures
+	  current draw using a shunt resistor and differential ADC.
+	  This module can be removed after testing by setting this to 'n'.
+
+source "Kconfig.zephyr"
