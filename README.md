@@ -21,7 +21,7 @@ Desenvolver uma coleira eletrônica capaz de:
 - Monitoramento de bateria via ADC
 - Aplicativo móvel para leitura de RSSI, cálculo de distância e controle remoto
 
-## Arquitetura Resumida
+## Arquitetura
 
 Camadas de software utilizadas:
 
@@ -47,8 +47,28 @@ Camadas de software utilizadas:
 - Buzzer piezoelétrico
 - Bateria Li-Po
 - LEDs de status
+┌─────────────────────────────────────┐
+│         Aplicação (main.c)          │
+│  - Loop principal                   │
+│  - Callbacks BLE/GATT               │
+│  - Lógica de controle               │
+├─────────────────────────────────────┤
+│     HAL (Hardware Abstraction)      │
+│  - hal/ble.c      (BLE)             │
+│  - hal/buzzer.c   (PWM)             │
+│  - hal/battery.c  (ADC)             │
+├─────────────────────────────────────┤
+│      Serviços GATT (gatt/)          │
+│  - buzzer_service.c  (customizado)  │
+│  - battery_service.c (0x180F)       │
+├─────────────────────────────────────┤
+│        Zephyr RTOS + nRF SDK        │
+│  - Bluetooth stack                  │
+│  - Drivers (PWM, ADC, GPIO)         │
+│  - Power management                 │
+└─────────────────────────────────────┘
 
-## Exemplo de Estrutura de Diretórios
+## Estrutura de Diretórios
 
 ```
 amigo_perto_v2/
@@ -79,6 +99,31 @@ amigo_perto_v2/
 - **Buzzer** piezoelétrico para alerta (18kHz)
 - **Bateria** tipo Li-Po (3.0V - 4.2V)
 - **LEDs** de status (verde e azul)
+
+## Integração com o Aplicativo
+
+Arquitetura do Sistema
+┌──────────────┐         BLE          ┌──────────────┐
+│  Smartphone  │◄────────────────────►│   Coleira    │
+│              │   RSSI (lido pelo    │  (Firmware)  │
+│  - Lê RSSI   │    aplicativo)       │              │
+│  - Calcula   │                      │  - Recebe    │
+│    distância │   Comandos GATT      │    comandos  │
+│  - Envia     ├─────────────────────►│  - Aciona    │
+│    comandos  │   (buzzer ON/OFF)    │    buzzer    │
+│  - Monitora  │                      │  - Reporta   │
+│    bateria   │◄─────────────────────┤    bateria   │
+└──────────────┘   Status (battery)   └──────────────┘
+
+## Fluxo de Operação
+
+1. O aplicativo realiza **scan BLE** e se conecta à coleira.
+2. O aplicativo lê o **RSSI periodicamente** por meio de callbacks BLE nativos.
+3. A distância até a coleira é estimada usando um **modelo de propagação de sinal**.
+4. A distância estimada é comparada com o **limiar configurado pelo usuário**.
+5. Se o limiar for ultrapassado, o aplicativo escreve **0x01** na característica **Buzzer Intermittent**.
+6. O firmware aciona o **buzzer em modo intermitente**, reduzindo o consumo de energia.
+7. O aplicativo lê periodicamente a característica **Battery Level (0x2A19)** para monitoramento da bateria.
 
 ## Como Compilar
 
