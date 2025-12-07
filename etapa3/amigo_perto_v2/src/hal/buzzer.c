@@ -1,239 +1,175 @@
 /*
- * HAL Buzzer - Hardware Abstraction Layer para controle de Buzzer/LED via PWM
+ * HAL Buzzer - Controle de buzzer piezo via PWM
  * 
- * @file buzzer.c
- * @brief Implementação do HAL Buzzer
- * Localização: src/hal/buzzer.c
- * Header público: include/hal/buzzer.h
- * 
- * Este módulo implementa o controle de buzzer através de PWM para acionamento
- * de alarmes intermitentes com diferentes intensidades.
- * 
- * Funcionalidades:
- * - Controle de buzzer via PWM com duty cycle configurável
- * - Padrão intermitente (500ms ON/OFF)
- * - 3 níveis de intensidade (LOW=25%, MEDIUM=50%, HIGH=100%)
- * - Thread dedicada para temporização
- * - Controle thread-safe com semáforos
- * 
+ * Frequência: 18 kHz (audível para cães, quase inaudível para humanos)
+ * Padrão burst: 20ms ON / 80ms OFF (economia de ~75% energia)
+ * Duty cycle: 20-40% recomendado para baixo consumo
+ *
  * Copyright (c) 2025
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
 #include "hal/buzzer.h"
-
-// Zephyr includes
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>
 
-// Registra módulo de logging
 LOG_MODULE_REGISTER(hal_buzzer, LOG_LEVEL_DBG);
 
-/*******************************************************************************
- * CONFIGURAÇÕES E CONSTANTES
- ******************************************************************************/
-
-// Configurações e constantes
-
-// Configuração do PWM a partir do devicetree
+// === CONFIGURAÇÃO HARDWARE ===
 #define PWM_LED0_NODE DT_ALIAS(pwm_led0)
-
 #if !DT_NODE_HAS_STATUS(PWM_LED0_NODE, okay)
-#error "pwm-led0 devicetree alias não está definido ou não está okay"
+#error "pwm-led0 devicetree alias não está definido"
 #endif
 
-// Parâmetros PWM
-#define PWM_PERIOD_NS       20000000U   /**< 20ms - 50Hz */
-#define PWM_PULSE_OFF_NS    0U          /**< PWM desligado */
+// === PARÂMETROS PWM E BURST ===
+#define PWM_PERIOD_NS    55555U  // 18 kHz (~55.5µs)
+#define BURST_ON_MS      20      // Burst: 20ms ligado
+#define BURST_OFF_MS     80      // Burst: 80ms desligado (economia 75%)
 
-#define PATTERN_INTERMITTENT_PERIOD_MS  500   /**< Período on/off intermitente */
-
-/*******************************************************************************
- * VARIÁVEIS PRIVADAS
- ******************************************************************************/
-
-// Variáveis privadas
-
-// Device handle do PWM
+// === ESTADO INTERNO ===
 static const struct pwm_dt_spec pwm_led = PWM_DT_SPEC_GET(PWM_LED0_NODE);
-
-// Estado do módulo
 static bool initialized = false;
-static uint8_t current_intensity = HAL_BUZZER_INTENSITY_MEDIUM;
+static uint8_t current_intensity = HAL_BUZZER_INTENSITY_LOW;  // Duty cycle padrão: 20%
+static struct k_work_delayable intermittent_work;
+static bool intermittent_active = false;
 
-// Work item para padrão intermitente
-static struct k_work_delayable pattern_intermittent_work;
-static bool pattern_intermittent_active = false;
+// === FUNÇÕES AUXILIARES ===
 
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - CONTROLE PWM
- ******************************************************************************/
-
-// Funções privadas - controle PWM
-
-/**
- * @brief Converte intensidade percentual em nanosegundos de pulso PWM
- * 
- * @param intensity Intensidade em porcentagem (0-100)
- * @return Duração do pulso em nanosegundos
- */
-static uint32_t intensity_to_pulse_ns(uint8_t intensity)
+// Converte duty cycle (0-100%) em pulso PWM (nanosegundos)
+static inline uint32_t intensity_to_pulse_ns(uint8_t intensity) 
 {
-	if (intensity > 100) {
-		intensity = 100;
-	}
+	// Limita intensidade ao máximo de 100%
+	if (intensity > HAL_BUZZER_INTENSITY_MAX) intensity = HAL_BUZZER_INTENSITY_MAX;
 	
-	// Calcula duty cycle proporcional
+	// Calcula largura do pulso proporcional ao período
 	return (PWM_PERIOD_NS * intensity) / 100;
 }
 
-/**
- * @brief Define o PWM com base na intensidade
- * 
- * @param intensity Intensidade (0-100), 0 desliga o PWM
- * @return 0 em sucesso, < 0 em erro
- */
-static int pwm_set_intensity(uint8_t intensity)
+// Aplica duty cycle ao PWM (0 = desligado)
+static int set_pwm(uint8_t intensity) 
 {
-	uint32_t pulse_ns = intensity_to_pulse_ns(intensity);
-	
-	int ret = pwm_set_dt(&pwm_led, PWM_PERIOD_NS, pulse_ns);
-	if (ret < 0) 
-	{
-		LOG_ERR("Falha ao configurar PWM (err %d)", ret);
-		return ret;
-	}
-	
-	return 0;
+	// Configura o PWM com o período e pulso calculado
+	int ret = pwm_set_dt(&pwm_led, PWM_PERIOD_NS, intensity_to_pulse_ns(intensity));
+	// Registra erro se a configuração falhar
+	if (ret < 0) LOG_ERR("Erro ao configurar PWM: %d", ret);
+
+	return ret;
 }
 
-/*******************************************************************************
- * HANDLERS DE PADRÕES
- ******************************************************************************/
-
-// Handler do padrão intermitente
-
-/**
- * @brief Handler do padrão intermitente
- * 
- * Alterna o estado do buzzer a cada 500ms
- */
-static void pattern_intermittent_handler(struct k_work *work)
+// === HANDLER BURST INTERMITENTE ===
+// Alterna 20ms ON / 80ms OFF para economia de energia
+static void intermittent_handler(struct k_work *work) 
 {
+	// Mantém o estado atual do burst (ligado/desligado)
 	static bool state = false;
-	
-	if (!pattern_intermittent_active) 
+	// Se o modo intermitente foi desativado, desliga e retorna
+	if (!intermittent_active) 
 	{
-		pwm_set_intensity(0);
+		set_pwm(HAL_BUZZER_INTENSITY_OFF);
 		return;
 	}
-	
-	// Alterna estado
+
+	// Alterna entre ligado e desligado
 	state = !state;
-	
-	if (state) 
-	{
-		pwm_set_intensity(current_intensity);
-	} 
-	else 
-	{
-		pwm_set_intensity(0);
-	}
-	
-	// Reagenda
-	k_work_schedule(&pattern_intermittent_work, 
-	                K_MSEC(PATTERN_INTERMITTENT_PERIOD_MS));
+	// Aplica intensidade quando ligado, 0 quando desligado
+	set_pwm(state ? current_intensity : HAL_BUZZER_INTENSITY_OFF);
+	// Agenda próxima alternância (20ms ON ou 80ms OFF)
+	k_work_schedule(&intermittent_work, K_MSEC(state ? BURST_ON_MS : BURST_OFF_MS));
 }
 
 
 
-/*******************************************************************************
- * FUNÇÕES PRIVADAS - CONTROLE DE PADRÕES
- ******************************************************************************/
-
-// Funções privadas - controle de padrão intermitente
-
-
-static void stop_intermittent(void)
+// Interrompe burst e desliga buzzer
+static void stop_intermittent(void) 
 {
-	pattern_intermittent_active = false;
-	k_work_cancel_delayable(&pattern_intermittent_work);
-	pwm_set_intensity(0);
+	// Marca o modo intermitente como inativo
+	intermittent_active = false;
+	// Cancela qualquer trabalho agendado
+	k_work_cancel_delayable(&intermittent_work);
+	// Desliga o PWM
+	set_pwm(HAL_BUZZER_INTENSITY_OFF);
 }
+
+// === API PÚBLICA ===
 
 /**
- * @brief Inicia o padrão intermitente
- * 
- * @param intensity Intensidade do buzzer (0-100)
- * @return 0 em sucesso
+ * Ativa/desativa padrão burst: 20ms ON / 80ms OFF
+ * @param active true=ativar, false=desativar
+ * @param intensity Duty cycle 0-100 (recomendado: 20-40)
  */
-int hal_buzzer_set_intermittent(bool active, uint8_t intensity)
+int hal_buzzer_set_intermittent(bool active, uint8_t intensity) 
 {
+	// Verifica se o HAL foi inicializado
 	if (!initialized) 
 	{
 		LOG_ERR("HAL Buzzer não inicializado");
 		return HAL_BUZZER_ERROR_STATE;
 	}
 
-	if (intensity > 100) 
+	// Valida o parâmetro de intensidade
+	if (intensity > HAL_BUZZER_INTENSITY_MAX) 
 	{
-		LOG_ERR("Intensidade inválida: %d (máximo 100)", intensity);
+		LOG_ERR("Intensidade inválida: %d", intensity);
 		return HAL_BUZZER_ERROR_INVALID;
 	}
 
+	// Ativa ou desativa o modo intermitente
 	if (active) 
 	{
+		// Armazena a intensidade configurada
 		current_intensity = intensity;
-		pattern_intermittent_active = true;
-		k_work_schedule(&pattern_intermittent_work, K_NO_WAIT);
-		LOG_INF("Buzzer intermitente ATIVADO (intensidade: %d%%)", intensity);
+		// Marca o modo intermitente como ativo
+		intermittent_active = true;
+		// Inicia o trabalho de burst imediatamente
+		k_work_schedule(&intermittent_work, K_NO_WAIT);
+		LOG_INF("Buzzer ATIVADO (%d%%)", intensity);
 	} 
 	else 
 	{
+		// Para o modo intermitente e desliga o buzzer
 		stop_intermittent();
-		LOG_INF("Buzzer intermitente DESATIVADO");
+		LOG_INF("Buzzer DESATIVADO");
 	}
 
 	return HAL_BUZZER_SUCCESS;
 }
 
 
-
-/*******************************************************************************
- * API PÚBLICA
- ******************************************************************************/
-
-// API pública
-
-int hal_buzzer_init(void)
+/**
+ * Inicializa buzzer: 18 kHz, duty cycle 20%, burst 20ms/80ms
+ */
+int hal_buzzer_init(void) 
 {
+	// Evita reinicialização
 	if (initialized) 
 	{
 		LOG_WRN("HAL Buzzer já inicializado");
 		return HAL_BUZZER_SUCCESS;
 	}
-	// Verifica se o device PWM está pronto
+	// Verifica se o dispositivo PWM está pronto
 	if (!device_is_ready(pwm_led.dev)) 
 	{
 		LOG_ERR("PWM device não está pronto");
 		return HAL_BUZZER_ERROR_INIT;
 	}
-	// Inicializa PWM desligado
-	int ret = pwm_set_intensity(0);
-	if (ret < 0) 
+	// Inicializa o PWM desligado
+	if (set_pwm(HAL_BUZZER_INTENSITY_OFF) < 0) 
 	{
 		LOG_ERR("Falha ao inicializar PWM");
 		return HAL_BUZZER_ERROR_INIT;
 	}
 
-	// Inicializa work item
-	k_work_init_delayable(&pattern_intermittent_work, pattern_intermittent_handler);
-	current_intensity = HAL_BUZZER_INTENSITY_MEDIUM;
-	pattern_intermittent_active = false;
+	// Inicializa o trabalho delayable para o modo intermitente
+	k_work_init_delayable(&intermittent_work, intermittent_handler);
+	// Define intensidade padrão
+	current_intensity = HAL_BUZZER_INTENSITY_LOW;
+	// Modo intermitente começa desativado
+	intermittent_active = false;
+	// Marca como inicializado
 	initialized = true;
-	LOG_INF("HAL Buzzer inicializado com sucesso");
+	LOG_INF("HAL Buzzer OK: 18kHz, 20%%, burst 20/80ms");
 
 	return HAL_BUZZER_SUCCESS;
 }

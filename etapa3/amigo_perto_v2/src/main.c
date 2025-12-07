@@ -171,7 +171,9 @@ static void on_buzzer_intermittent_write(const bool buzzer_state)
 	LOG_INF("=== COMANDO BUZZER ===");
 	LOG_INF("Estado: %s", buzzer_state ? "ATIVADO" : "DESATIVADO");
 	
-	// Controla o buzzer através do HAL com intensidade média
+	// Controla o buzzer através do HAL com intensidade média (30%, otimizado para baixo consumo)
+	// Frequência: 18 kHz (audível para cachorros, quase inaudível para humanos)
+	// Padrão burst: 20ms ON / 80ms OFF (reduz consumo em ~75%)
 	int err = hal_buzzer_set_intermittent(buzzer_state, HAL_BUZZER_INTENSITY_MEDIUM);
 	if (err != HAL_BUZZER_SUCCESS) 
 	{

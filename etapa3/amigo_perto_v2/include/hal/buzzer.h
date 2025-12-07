@@ -1,18 +1,9 @@
 /*
- * HAL Buzzer - Hardware Abstraction Layer para controle de Buzzer/LED via PWM
- */
-
-/**
- * @file buzzer.h
- * @brief Interface HAL para controle de buzzer através de PWM
- * 
- * Este módulo encapsula a lógica de controle do buzzer (LED simulando buzzer)
- * via PWM, fornecendo uma API simples e independente da implementação específica
- * do driver do Zephyr.
- * 
- * Funcionalidades:
- * - Inicialização do subsistema de buzzer
- * - Controle intermitente liga/desliga com diferentes intensidades
+ * HAL Buzzer - Interface para controle de buzzer/LED via PWM
+ *
+ * Fornece funções para inicializar e controlar o buzzer piezo passivo.
+ * Otimizado para cachorros (18 kHz) com baixo consumo energético (duty cycle 20-40%).
+ * Padrão burst: 20ms ON / 80ms OFF (reduz consumo em ~75%).
  */
 
 #ifndef HAL_BUZZER_H_
@@ -26,51 +17,55 @@ extern "C" {
 #include <stdbool.h>
 
 /**
- * @brief Códigos de erro do HAL Buzzer
+ * @brief Códigos de retorno das funções do HAL Buzzer
  */
 typedef enum {
-	HAL_BUZZER_SUCCESS = 0,          /**< Operação bem-sucedida */
-	HAL_BUZZER_ERROR_INIT = -1,      /**< Erro na inicialização */
-	HAL_BUZZER_ERROR_INVALID = -2,   /**< Parâmetro inválido */
-	HAL_BUZZER_ERROR_STATE = -3,     /**< Estado inválido */
+	HAL_BUZZER_SUCCESS = 0,        // Operação bem-sucedida
+	HAL_BUZZER_ERROR_INIT = -1,    // Erro na inicialização
+	HAL_BUZZER_ERROR_INVALID = -2, // Parâmetro inválido
+	HAL_BUZZER_ERROR_STATE = -3,   // Estado inválido
 } hal_buzzer_error_t;
 
 /**
- * @brief Níveis de intensidade do buzzer
+ * @brief Níveis de intensidade (duty cycle) para o buzzer
+ * 
+ * Para buzzer piezo a 18 kHz:
+ * - Valores 20-40: Baixo consumo, audível para cachorros, quase inaudível para humanos
+ * - Valores 50-75: Médio consumo, mais audível
+ * - Valor 100: Alto consumo, máxima intensidade
  */
 typedef enum {
-	HAL_BUZZER_INTENSITY_OFF = 0,    /**< Desligado (0%) */
-	HAL_BUZZER_INTENSITY_LOW = 25,   /**< Baixa intensidade (25%) */
-	HAL_BUZZER_INTENSITY_MEDIUM = 50,/**< Média intensidade (50%) */
-	HAL_BUZZER_INTENSITY_HIGH = 75,  /**< Alta intensidade (75%) */
-	HAL_BUZZER_INTENSITY_MAX = 100,  /**< Máxima intensidade (100%) */
+	HAL_BUZZER_INTENSITY_OFF = 0,    // Desligado
+	HAL_BUZZER_INTENSITY_LOW = 20,   // Baixa intensidade (recomendado, baixo consumo)
+	HAL_BUZZER_INTENSITY_MEDIUM = 30,// Média intensidade (balanceado)
+	HAL_BUZZER_INTENSITY_HIGH = 40,  // Alta intensidade (ainda econômico)
+	HAL_BUZZER_INTENSITY_MAX = 100,  // Máxima intensidade (alto consumo)
 } hal_buzzer_intensity_t;
 
 /**
  * @brief Inicializa o subsistema de buzzer
  * 
- * Configura o hardware PWM, inicializa os timers e prepara o buzzer
- * para operação. Deve ser chamada antes de qualquer outra função do HAL.
+ * Configura PWM a 18 kHz (ideal para cachorros, quase inaudível para humanos).
+ * Duty cycle padrão: 20% (baixo consumo).
+ * Deve ser chamada antes de qualquer outra função do HAL Buzzer.
  * 
- * @return HAL_BUZZER_SUCCESS em caso de sucesso
- * @return HAL_BUZZER_ERROR_INIT se houver erro na inicialização
+ * @return HAL_BUZZER_SUCCESS ou erro
  */
 int hal_buzzer_init(void);
 
 /**
- * @brief Liga/desliga o buzzer intermitente
+ * @brief Ativa/desativa padrão burst intermitente (alarme sonoro)
  * 
- * Ativa ou desativa o padrão intermitente (500ms on/off) na intensidade fornecida.
+ * Padrão burst: 20ms ligado / 80ms desligado (reduz consumo em ~75%).
+ * Frequência: 18 kHz (audível para cachorros, quase inaudível para humanos).
  * 
  * @param active true para ativar, false para desativar
- * @param intensity Intensidade do buzzer (0-100)
- * 
- * @return HAL_BUZZER_SUCCESS em caso de sucesso
- * @return HAL_BUZZER_ERROR_INVALID se intensidade > 100
- * @return HAL_BUZZER_ERROR_STATE se buzzer não foi inicializado
+ * @param intensity Duty cycle desejado (0-100)
+ *                  Recomendado: 20-40 para baixo consumo
+ *                  Use HAL_BUZZER_INTENSITY_LOW/MEDIUM/HIGH ou valor customizado
+ * @return HAL_BUZZER_SUCCESS ou erro
  */
 int hal_buzzer_set_intermittent(bool active, uint8_t intensity);
-
 
 #ifdef __cplusplus
 }

@@ -242,7 +242,8 @@ static uint8_t voltage_to_percentage(uint16_t voltage_mv)
 			int32_t voltage_diff = voltage_mv - voltage_low;
 			
 			// Proteção contra divisão por zero (improvável, mas seguro)
-			if (voltage_range == 0) {
+			if (voltage_range == 0) 
+			{
 				return percentage_high;
 			}
 			
