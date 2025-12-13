@@ -61,18 +61,6 @@
           <button (click)="bluetoothService.sendAlert(0)" class="control-button no-alert">Parar Alerta</button>
         </div>
 
-        <!-- O botão de pânico original, sem desabilitar -->
-        <button class="panic-button" (click)="onPanic()">
-          PÂNICO
-        </button>
-
-        <!-- Área de Feedback Refatorada -->
-        @if (panicStatus(); as status) {
-          <div class="panic-feedback" [class]="status.type">
-            {{ status.message }}
-          </div>
-        }
-
         <button class="scan-button disconnect" (click)="bluetoothService.disconnect()">
           Sair do Modo Alerta
         </button>
