@@ -1,33 +1,35 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Device } from '../bluetooth.service';
+import { BluetoothService, Device } from '../bluetooth.service';
 
 @Component({
   selector: 'app-device-info',
   imports: [CommonModule],
   template: `
-    @if (device(); as dev) {
-      <div class="device-card">
-        <div class="device-name">{{ dev.name || 'Dispositivo Desconhecido' }}</div>
-        
-        @if (dev.rssi !== undefined && dev.distance !== undefined) {
-          <div class="device-stats">
-            <div class="stat-item">
-              <span class="stat-label">RSSI</span>
-              <span class="stat-value">{{ dev.rssi }} dBm</span>
+    @if (bluetoothService.showDeviceInfo()) {
+      @if (device(); as dev) {
+        <div class="device-card">
+          <div class="device-name">{{ dev.name || 'Dispositivo Desconhecido' }}</div>
+          
+          @if (dev.rssi !== undefined && dev.distance !== undefined) {
+            <div class="device-stats">
+              <div class="stat-item">
+                <span class="stat-label">RSSI</span>
+                <span class="stat-value">{{ dev.rssi }} dBm</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Distância</span>
+                <span class="stat-value">~{{ dev.distance }} m</span>
+              </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Distância</span>
-              <span class="stat-value">~{{ dev.distance }} m</span>
-            </div>
-          </div>
-          @if(dev.distanceCategory) {
-            <div class="distance-category">{{ dev.distanceCategory }}</div>
+            @if(dev.distanceCategory) {
+              <div class="distance-category">{{ dev.distanceCategory }}</div>
+            }
+          } @else {
+            <div class="device-status">Conectado</div>
           }
-        } @else {
-          <div class="device-status">Conectado</div>
-        }
-      </div>
+        </div>
+      }
     }
   `,
   styles: `
@@ -91,4 +93,5 @@ import { Device } from '../bluetooth.service';
 })
 export class DeviceInfoComponent {
   public device = input.required<Device>();
+  public bluetoothService = inject(BluetoothService);
 }

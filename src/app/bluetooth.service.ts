@@ -76,6 +76,7 @@ export class BluetoothService {
   error = signal<string | null>('Pronto para iniciar. Clique para procurar um dispositivo.');
   isOutOfRange = signal<boolean>(false);
   isLoading = signal<boolean>(false); // Signal para o estado de carregamento
+  showDeviceInfo = signal<boolean>(true); // Controla a visibilidade do card de informações
 
   // --- Ações Públicas ---
 
@@ -134,6 +135,7 @@ export class BluetoothService {
 
       this.zone.run(() => {
         this.operatingMode.set('alert');
+        this.showDeviceInfo.set(false); // Oculta o card de informações
         this.error.set('Modo Alerta: Pronto para enviar alertas ao iTag. O RSSI congela neste modo.');
       });
     } catch (error: any) {
@@ -206,6 +208,7 @@ export class BluetoothService {
       this.stopOutOfRangeAlertCycle();
       this.device.set(null);
       this.isOutOfRange.set(false);
+      this.showDeviceInfo.set(true); // Mostra o card de informações novamente
       this.bluetoothDevice?.removeEventListener('gattserverdisconnected', this.onDisconnected);
       this.bluetoothDevice = null;
       this.alertLevelCharacteristic = null;
