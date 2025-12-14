@@ -7,63 +7,89 @@ Firmware embarcado em C para microcontroladores da Nordic Semiconductor, com com
 Desenvolver uma coleira eletrônica capaz de:
 
 - Estabelecer conexão BLE segura com o smartphone do tutor
-- Monitorar continuamente o RSSI
-- Estimar a distância e comparar com um raio configurável
-- Acionar alerta físico (buzzer) quando o limite for ultrapassado
+- Fornecer leitura de RSSI para o aplicativo móvel
+- Receber comandos remotos para acionamento do buzzer
+- Reportar status de bateria em tempo real
 - Manter consumo de energia reduzido para operação contínua
 
 ## Funcionalidades Principais
 
-- BLE 5.x (advertising e/ou GATT)
-- Medição periódica de RSSI
-- Estimativa de distância com filtragem e histerese
-- Controle de buzzer via PWM
-- Armazenamento de parâmetros (limiar, emparelhamento, intensidade)
-- Aplicativo móvel para configuração e monitoramento
+- BLE 5.x (advertising e GATT)
+- Serviço GATT customizado para controle do buzzer
+- Serviço GATT padrão Battery (0x180F)
+- Controle de buzzer via PWM com modo intermitente
+- Monitoramento de bateria via ADC
+- Aplicativo móvel para leitura de RSSI, cálculo de distância e controle remoto
 
-## Arquitetura Resumida
+## Arquitetura
 
 Camadas de software utilizadas:
 
 **Aplicação**
 - Loop principal
-- Leitura de RSSI
-- Cálculo de distância
-- Lógica do dome virtual
-- Acionamento do buzzer
+- Callbacks BLE
+- Lógica de controle
 
 **HAL (Hardware Abstraction Layer)**
 - BLE
 - Buzzer
-- Botão
 - Bateria
 
+**Serviços GATT**
+- Buzzer Service (customizado)
+- Battery Service (padrão 0x180F)
+
 **Drivers e Stack BLE**
-- Zephyr RTOS ou bare metal com nRF Connect SDK
+- Zephyr RTOS com nRF Connect SDK
 
 **Hardware**
-- nRF52840 ou nRF54L15
-- Buzzer
-- Bateria compacta
-- Botão de controle
-
-## Exemplo de Estrutura de Diretórios
+- XIAO nRF52840
+- Buzzer piezoelétrico
+- Bateria Li-Po
+- LEDs de status
 
 ```
-amigo_perto/
+┌─────────────────────────────────────┐
+│         Aplicação (main.c)          │
+│  - Loop principal                   │
+│  - Callbacks BLE/GATT               │
+│  - Lógica de controle               │
+├─────────────────────────────────────┤
+│     HAL (Hardware Abstraction)      │
+│  - hal/ble.c      (BLE)             │
+│  - hal/buzzer.c   (PWM)             │
+│  - hal/battery.c  (ADC)             │
+├─────────────────────────────────────┤
+│      Serviços GATT (gatt/)          │
+│  - buzzer_service.c  (customizado)  │
+│  - battery_service.c (0x180F)       │
+├─────────────────────────────────────┤
+│        Zephyr RTOS + nRF SDK        │
+│  - Bluetooth stack                  │
+│  - Drivers (PWM, ADC, GPIO)         │
+│  - Power management                 │
+└─────────────────────────────────────┘
+```
+
+## Estrutura de Diretórios
+
+```
+amigo_perto_v2/
 ├── src/
-│ ├── main.c
-│ ├── proximity.c
-│ └── hal/
-│ ├── ble_hal.c
-│ ├── ble_hal.h
-│ ├── buzzer_hal.c
-│ ├── buzzer_hal.h
-│ ├── battery_hal.c
-│ ├── battery_hal.h
-│ └── button_hal.c
+│   ├── main.c
+│   ├── hal/
+│   │   ├── ble.c
+│   │   ├── buzzer.c
+│   │   └── battery.c
+│   └── gatt/
+│       ├── buzzer_service.c
+│       └── battery_service.c
+├── include/
+│   ├── hal/
+│   └── gatt/
 ├── boards/
-│ └── nrf52840_collar.overlay
+│   ├── xiao_ble.overlay
+│   └── nrf52840dongle_nrf52840.overlay
 ├── prj.conf
 ├── CMakeLists.txt
 └── README.md
@@ -71,23 +97,81 @@ amigo_perto/
 
 ## Hardware Utilizado
 
-- **Microcontrolador**: nRF52840 ou nRF54L15
-- **Conexão**: BLE 5.x
-- **Buzzer** para alerta
-- **Bateria** tipo Li-Po ou CR
+- **Microcontrolador**: XIAO nRF52840 (Nordic nRF52840)
+- **Conexão**: BLE 5.3
+- **Buzzer** piezoelétrico para alerta (18kHz)
+- **Bateria** tipo Li-Po (3.0V - 4.2V)
+- **LEDs** de status (verde e azul)
+
+## Integração com o Aplicativo
+
+Arquitetura do Sistema
+```
+┌──────────────┐         BLE          ┌──────────────┐
+│  Smartphone  │◄────────────────────►│   Coleira    │
+│              │   RSSI (lido pelo    │  (Firmware)  │
+│  - Lê RSSI   │    aplicativo)       │              │
+│  - Calcula   │                      │  - Recebe    │
+│    distância │   Comandos GATT      │    comandos  │
+│  - Envia     ├─────────────────────►│  - Aciona    │
+│    comandos  │   (buzzer ON/OFF)    │    buzzer    │
+│  - Monitora  │                      │  - Reporta   │
+│    bateria   │◄─────────────────────┤    bateria   │
+└──────────────┘   Status (battery)   └──────────────┘
+```
+
+## Fluxo de Operação
+
+1. O aplicativo realiza **scan BLE** e se conecta à coleira.
+2. O aplicativo lê o **RSSI periodicamente** por meio de callbacks BLE nativos.
+3. A distância até a coleira é estimada usando um **modelo de propagação de sinal**.
+4. A distância estimada é comparada com o **limiar configurado pelo usuário**.
+5. Se o limiar for ultrapassado, o aplicativo escreve **0x01** na característica **Buzzer Intermittent**.
+6. O firmware aciona o **buzzer em modo intermitente**, reduzindo o consumo de energia.
+7. O aplicativo lê periodicamente a característica **Battery Level (0x2A19)** para monitoramento da bateria.
 
 ## Como Compilar
 
 **Requisitos:**
-- nRF Connect SDK
-- VSCODE com extensões Nordic
+- nRF Connect SDK v3.1.0+
+- VS Code com extensões Nordic (nRF Connect for VS Code)
+- Toolchain ARM GCC
+
+**Passos:**
+```bash
+# Clone o repositório
+git clone <repository-url>
+cd amigo_perto_v2
+
+# Compile o projeto
+west build -b xiao_ble/nrf52840 --pristine
+
+# Flash no hardware
+west flash
+```
+
+## Lógica de Distância
+
+**A lógica de conversão RSSI → distância é implementada no aplicativo móvel**, não no firmware:
+
+1. **Aplicativo** lê RSSI periodicamente via BLE
+2. **Aplicativo** calcula distância usando modelo de propagação log-distance
+3. **Aplicativo** compara com limiar configurado
+4. **Se ultrapassar**: aplicativo envia comando para ativar buzzer via GATT
+5. **Firmware** aciona buzzer em modo intermitente (economia de energia)
+
 
 ## Próximas Etapas
-- Iniciar o desenvolvimento dos módulos de hardware e software
-- Realizar testes unitários nos módulos individuais (Leitura de RSSI, comunicação BLE e etc)
-- Testar implementação leitura periódica de RSSI no app móvel (modo Advertising) ou no firmware (modo conexão - GATT);
-- Implementar HAL
-- Aplicativo Android simples para configuração
+
+- [x] Implementar HAL (BLE, Buzzer, Battery)
+- [x] Implementar serviços GATT
+- [x] Otimizar consumo de energia - Primeira versão
+- [x] Desenvolver aplicativo Android
+- [x] Testes de consumo de energia
+- [ ] Integração com o aplicativo
+- [ ] Testes avançados
+- [ ] Integração com o case
+
 
 ## Contato
 
