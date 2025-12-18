@@ -27,7 +27,8 @@ export class BluetoothService {
       this.connectionStatus.set('connecting');
 
       this.device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [NUS_SERVICE_UUID] }],
+        acceptAllDevices: true, // Accept all devices
+        optionalServices: [NUS_SERVICE_UUID], // Request NUS as an optional service
       });
 
       this.deviceInfo.set({ name: this.device.name ?? 'Unknown Device', id: this.device.id });
