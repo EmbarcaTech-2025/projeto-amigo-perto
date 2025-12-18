@@ -1,12 +1,11 @@
+
 import { Injectable, signal, inject, NgZone } from '@angular/core';
 
 // --- Type Definitions for Web Bluetooth API ---
-// Adicionadas para garantir a robustez da compilação
 interface BluetoothDevice extends EventTarget {
   readonly id: string;
   readonly name?: string | undefined;
   readonly gatt?: BluetoothRemoteGATTServer | undefined;
-  watchAdvertisements(options?: any): Promise<void>;
 }
 
 interface BluetoothRemoteGATTServer {
@@ -30,90 +29,106 @@ interface BluetoothRemoteGATTCharacteristic extends EventTarget {
   readValue(): Promise<DataView>;
   writeValue(value: BufferSource): Promise<void>;
   writeValueWithoutResponse(value: BufferSource): Promise<void>;
+  startNotifications(): Promise<BluetoothRemoteGATTCharacteristic>;
+  stopNotifications(): Promise<BluetoothRemoteGATTCharacteristic>;
 }
 
-interface BluetoothAdvertisingEvent extends Event {
-  readonly device: BluetoothDevice;
-  readonly rssi?: number | undefined;
-  readonly txPower?: number | undefined;
-}
+// --- UUID Definitions ---
+const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_RX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // App -> Device (Write)
+const NUS_TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // Device -> App (Notify)
+
+const BATTERY_SERVICE_UUID = '0000180f-0000-1000-8000-00805f9b34fb';
+const BATTERY_LEVEL_CHARACTERISTIC_UUID = '00002a19-0000-1000-8000-00805f9b34fb';
 
 
 export interface Device {
   name: string;
   id: string;
-  rssi?: number;
-  distance?: number;
-  distanceCategory?: string;
 }
 
-// --- Constantes de Rastreamento e Alerta ---
-const IMMEDIATE_ALERT_SERVICE_UUID = '00001802-0000-1000-8000-00805f9b34fb';
-const ALERT_LEVEL_CHARACTERISTIC_UUID = '00002a06-0000-1000-8000-00805f9b34fb';
-
-// --- Constantes de Calibração de Distância (RSSI) ---
-const MEASURED_POWER_AT_1M = -52; // Potência do sinal (em dBm) medida a 1 metro de distância.
-const ENVIRONMENTAL_FACTOR = 4;   // Fator ambiental. Varia de 2 (espaço aberto) a 4 (ambientes internos com paredes).
-const RSSI_OUT_OF_RANGE_THRESHOLD = -100; // Limite de RSSI para considerar "fora de alcance".
-
-
-export type OperatingMode = 'idle' | 'radar' | 'alert';
+export type ConnectionStatus = 'disconnected' | 'searching' | 'connecting' | 'connected';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BluetoothService {
   private zone = inject(NgZone);
+  private textEncoder = new TextEncoder();
+  private textDecoder = new TextDecoder();
+  
+  // --- Bluetooth State ---
   private bluetoothDevice: BluetoothDevice | null = null;
-  private alertLevelCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
-  private watchAdvertisementsController: AbortController | null = null;
-  private audioContext: AudioContext | null = null;
-  private alertIntervalId: any = null;
+  private nusRxCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private nusTxCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private batteryLevelCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
 
-  // --- Sinais Públicos de Estado ---
+  // --- Public State Signals ---
   device = signal<Device | null>(null);
-  operatingMode = signal<OperatingMode>('idle');
-  error = signal<string | null>('Pronto para iniciar. Clique para procurar um dispositivo.');
-  isOutOfRange = signal<boolean>(false);
-  isLoading = signal<boolean>(false); // Signal para o estado de carregamento
-  showDeviceInfo = signal<boolean>(true); // Controla a visibilidade do card de informações
+  connectionStatus = signal<ConnectionStatus>('disconnected');
+  error = signal<string | null>('Pronto para iniciar. Clique em "Conectar" para procurar um dispositivo.');
+  lastResponse = signal<string | null>(null);
+  batteryLevel = signal<number | null>(null);
+  isLoading = signal<boolean>(false);
 
-  // --- Ações Públicas ---
-
-  async startRadarMode(): Promise<void> {
-    if (this.operatingMode() !== 'idle') return;
-
+  // --- Public Actions ---
+  
+  async findAndConnect(): Promise<void> {
+    if (this.connectionStatus() !== 'disconnected') return;
     if (!navigator.bluetooth) {
       this.error.set('Web Bluetooth não é suportado neste navegador.');
       return;
     }
 
-    this.error.set('Procurando seu dispositivo... Por favor, selecione-o na janela.');
+    this.zone.run(() => {
+        this.isLoading.set(true);
+        this.connectionStatus.set('searching');
+        this.error.set('Procurando dispositivo... Por favor, selecione-o na janela.');
+    });
 
     try {
       this.bluetoothDevice = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [IMMEDIATE_ALERT_SERVICE_UUID],
-      });
-
-      this.device.set({
-        name: this.bluetoothDevice.name ?? 'Dispositivo Desconhecido',
-        id: this.bluetoothDevice.id,
-      });
-
-      this.bluetoothDevice.addEventListener('gattserverdisconnected', this.onDisconnected);
-
-      this.watchAdvertisementsController = new AbortController();
-
-      await this.bluetoothDevice.watchAdvertisements({ signal: this.watchAdvertisementsController.signal });
-      
-      this.bluetoothDevice.addEventListener('advertisementreceived', this.advertisementListener, {
-        once: false
+        filters: [{ services: [NUS_SERVICE_UUID] }],
+        optionalServices: [BATTERY_SERVICE_UUID]
       });
 
       this.zone.run(() => {
-          this.operatingMode.set('radar');
-          this.error.set('Modo Radar: Monitorando proximidade do dispositivo.');
+        this.device.set({
+          name: this.bluetoothDevice?.name ?? 'Dispositivo Desconhecido',
+          id: this.bluetoothDevice?.id ?? 'N/A',
+        });
+        this.connectionStatus.set('connecting');
+        this.error.set(`Conectando ao ${this.device()?.name}...`);
+      });
+
+      this.bluetoothDevice.addEventListener('gattserverdisconnected', this.onDisconnected);
+      const server = await this.bluetoothDevice.gatt!.connect();
+
+      // --- NUS Setup ---
+      const nusService = await server.getPrimaryService(NUS_SERVICE_UUID);
+      this.nusRxCharacteristic = await nusService.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
+      this.nusTxCharacteristic = await nusService.getCharacteristic(NUS_TX_CHARACTERISTIC_UUID);
+      await this.nusTxCharacteristic.startNotifications();
+      this.nusTxCharacteristic.addEventListener('characteristicvaluechanged', this.handleNusNotifications);
+
+      // --- Battery Service (BAS) Setup ---
+      try {
+        const batteryService = await server.getPrimaryService(BATTERY_SERVICE_UUID);
+        this.batteryLevelCharacteristic = await batteryService.getCharacteristic(BATTERY_LEVEL_CHARACTERISTIC_UUID);
+        await this.batteryLevelCharacteristic.startNotifications();
+        this.batteryLevelCharacteristic.addEventListener('characteristicvaluechanged', this.handleBatteryLevelNotifications);
+        // Read initial value
+        const batteryData = await this.batteryLevelCharacteristic.readValue();
+        this.updateBatteryLevel(batteryData);
+      } catch (e) {
+         console.warn('Serviço de Bateria não encontrado. Funcionalidade de bateria desabilitada.', e);
+      }
+      
+      this.zone.run(() => {
+        this.connectionStatus.set('connected');
+        this.error.set(`Conectado com sucesso ao ${this.device()?.name}.`);
+        this.lastResponse.set('Conexão estabelecida.');
+        this.isLoading.set(false);
       });
 
     } catch (error: any) {
@@ -121,117 +136,102 @@ export class BluetoothService {
     }
   }
 
-  async switchToAlertMode(): Promise<void> {
-    if (this.operatingMode() !== 'radar' || !this.bluetoothDevice) return;
-
-    this.isLoading.set(true); // Inicia o carregamento
-    this.stopWatchingAdvertisements();
-    this.error.set('Mudando para Modo Alerta... Conectando...');
-
-    try {
-      const server = await this.bluetoothDevice.gatt!.connect();
-      const service = await server.getPrimaryService(IMMEDIATE_ALERT_SERVICE_UUID);
-      this.alertLevelCharacteristic = await service.getCharacteristic(ALERT_LEVEL_CHARACTERISTIC_UUID);
-
-      this.zone.run(() => {
-        this.operatingMode.set('alert');
-        this.showDeviceInfo.set(false); // Oculta o card de informações
-        this.error.set('Modo Alerta: Pronto para enviar alertas ao iTag. O RSSI congela neste modo.');
-      });
-    } catch (error: any) {
-      this.error.set(`Falha ao conectar: ${error.message}`);
-      this.startRadarModeAfterFailure();
-    } finally {
-      this.isLoading.set(false); // Finaliza o carregamento (sucesso ou falha)
-    }
-  }
-
   disconnect(): void {
-    this.stopWatchingAdvertisements();
-
     if (this.bluetoothDevice?.gatt?.connected) {
       this.bluetoothDevice.gatt.disconnect();
     } else {
-      this.onDisconnected(); 
+      this.onDisconnected();
     }
   }
 
-  async sendAlert(level: 0 | 1 | 2): Promise<void> {
-    if (this.operatingMode() !== 'alert' || !this.alertLevelCharacteristic) {
-      this.error.set('Não está em modo de alerta ou característica não está disponível.');
+  async sendRawCommand(command: string): Promise<void> {
+    if (this.connectionStatus() !== 'connected' || !this.nusRxCharacteristic) {
+      this.error.set('Não é possível enviar comando: dispositivo não conectado.');
       return;
     }
     try {
-      await this.alertLevelCharacteristic.writeValueWithoutResponse(Uint8Array.of(level));
+      const data = this.textEncoder.encode(command);
+      await this.nusRxCharacteristic.writeValueWithoutResponse(data);
     } catch (error: any) {
-      this.error.set(`Erro ao enviar alerta: ${error.message}`);
+      this.error.set(`Erro ao enviar comando: ${error.message}`);
     }
   }
 
-  // --- Handlers e Métodos Privados ---
+  rebootDevice(): Promise<void> {
+    return this.sendRawCommand('r');
+  }
 
-  private advertisementListener = (event: Event) => {
-    const advEvent = event as BluetoothAdvertisingEvent;
+  requestBatteryLevelUpdate(): Promise<void> {
+    return this.sendRawCommand('p');
+  }
 
-    this.zone.run(() => {
-      if (this.operatingMode() !== 'radar') return;
+  toggleBuzzer(isOn: boolean): Promise<void> {
+      return this.sendRawCommand(isOn ? 'b' : 'e');
+  }
 
-      const { rssi } = advEvent;
-      if (rssi === undefined) return;
+  toggleLed(isOn: boolean): Promise<void> {
+      return this.sendRawCommand(isOn ? 'l' : 'o');
+  }
 
-      const distance = this.calculateDistance(rssi);
-      const distanceCategory = this.getDistanceCategory(distance);
 
-      const wasOutOfRange = this.isOutOfRange();
-      const isNowOutOfRange = rssi < RSSI_OUT_OF_RANGE_THRESHOLD;
+  // --- Private Handlers and Methods ---
 
-      this.isOutOfRange.set(isNowOutOfRange);
-
-      if (isNowOutOfRange && !wasOutOfRange) {
-        this.playOutOfRangeCycle();
-      } else if (!isNowOutOfRange && wasOutOfRange) {
-        this.stopOutOfRangeAlertCycle();
-      }
-
-      this.device.update(current => ({
-        ...current!,
-        rssi: rssi,
-        distance: distance,
-        distanceCategory: distanceCategory,
-      }));
-    });
+  private handleNusNotifications = (event: Event) => {
+    const characteristic = event.target as BluetoothRemoteGATTCharacteristic;
+    const value = characteristic.value;
+    if (value) {
+      const message = this.textDecoder.decode(value).trim();
+      this.zone.run(() => {
+        this.lastResponse.set(message);
+        console.log('NUS RX:', message);
+      });
+    }
   };
+
+  private handleBatteryLevelNotifications = (event: Event) => {
+    const characteristic = event.target as BluetoothRemoteGATTCharacteristic;
+    if (characteristic.value) {
+      this.updateBatteryLevel(characteristic.value);
+    }
+  }
+  
+  private updateBatteryLevel(dataView: DataView) {
+      const level = dataView.getUint8(0);
+      this.zone.run(() => {
+        this.batteryLevel.set(level);
+        console.log(`Nível da Bateria: ${level}%`);
+      });
+  }
 
   private onDisconnected = () => {
     this.zone.run(() => {
-      this.stopWatchingAdvertisements();
-      this.stopOutOfRangeAlertCycle();
-      this.device.set(null);
-      this.isOutOfRange.set(false);
-      this.showDeviceInfo.set(true); // Mostra o card de informações novamente
-      this.bluetoothDevice?.removeEventListener('gattserverdisconnected', this.onDisconnected);
-      this.bluetoothDevice = null;
-      this.alertLevelCharacteristic = null;
-      this.operatingMode.set('idle');
       this.error.set('Dispositivo desconectado. Pronto para uma nova busca.');
+      
+      // --- Clean up listeners ---
+      if (this.nusTxCharacteristic) {
+        this.nusTxCharacteristic.removeEventListener('characteristicvaluechanged', this.handleNusNotifications);
+      }
+      if (this.batteryLevelCharacteristic) {
+        this.batteryLevelCharacteristic.removeEventListener('characteristicvaluechanged', this.handleBatteryLevelNotifications);
+      }
+      if(this.bluetoothDevice) {
+        this.bluetoothDevice.removeEventListener('gattserverdisconnected', this.onDisconnected);
+      }
+
+      // --- Reset state ---
+      this.bluetoothDevice = null;
+      this.nusRxCharacteristic = null;
+      this.nusTxCharacteristic = null;
+      this.batteryLevelCharacteristic = null;
+      
+      this.device.set(null);
+      this.connectionStatus.set('disconnected');
+      this.lastResponse.set(null);
+      this.batteryLevel.set(null);
+      this.isLoading.set(false);
     });
   }
-
-  private stopWatchingAdvertisements() {
-      if (this.watchAdvertisementsController) {
-        this.watchAdvertisementsController.abort();
-        this.watchAdvertisementsController = null;
-      }
-      if (this.bluetoothDevice) {
-        this.bluetoothDevice.removeEventListener('advertisementreceived', this.advertisementListener);
-      }
-  }
-
-  private async startRadarModeAfterFailure() {
-    this.operatingMode.set('idle');
-    await this.startRadarMode();
-  }
-
+  
   private handleError(error: any) {
     this.zone.run(() => {
       if (error.name !== 'AbortError' && error.name !== 'NotFoundError') {
@@ -239,74 +239,5 @@ export class BluetoothService {
       }
       this.onDisconnected();
     });
-  }
-
-  /**
-   * Calcula a distância aproximada em metros com base no RSSI.
-   * Usa o modelo de path loss de log a distância.
-   */
-  private calculateDistance(rssi: number): number {
-    const exponent = (MEASURED_POWER_AT_1M - rssi) / (10 * ENVIRONMENTAL_FACTOR);
-    const distance = Math.pow(10, exponent);
-    return parseFloat(distance.toFixed(2));
-  }
-
-  /**
-   * Retorna uma categoria de distância com base na distância calculada em metros.
-   */
-  private getDistanceCategory(distance: number): string {
-    if (distance <= 0.5) return "Muito Perto (Toque)"; 
-    if (distance <= 2) return "Perto (Mesmo cômodo)";
-    if (distance <= 10) return "Médio (Casa ou escritório)";
-    return `Longe (Mais de 10 metros)`;
-  }
-
-
-  private beep() {
-    if (!this.audioContext) {
-        try {
-            this.audioContext = new AudioContext();
-        } catch (e) {
-            this.error.set('Alerta sonoro não suportado neste navegador.');
-            return;
-        }
-    }
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(987.77, this.audioContext.currentTime); // Nota B5
-    gainNode.gain.setValueAtTime(0.5, this.audioContext.currentTime);
-
-    oscillator.start();
-    oscillator.stop(this.audioContext.currentTime + 0.2); 
-  }
-
-  private playOutOfRangeCycle() {
-    if (this.alertIntervalId) return; 
-
-    let alertCount = 0;
-    const maxAlerts = 5;
-
-    this.beep();
-    alertCount++;
-
-    this.alertIntervalId = setInterval(() => {
-      if (alertCount >= maxAlerts) {
-        this.stopOutOfRangeAlertCycle();
-        return;
-      }
-      this.beep();
-      alertCount++;
-    }, 1000); 
-  }
-
-  private stopOutOfRangeAlertCycle() {
-    if (this.alertIntervalId) {
-      clearInterval(this.alertIntervalId);
-      this.alertIntervalId = null;
-    }
   }
 }

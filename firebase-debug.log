@@ -881,3 +881,571 @@ Before we get started, keep in mind:
 [debug] [2025-12-12T20:09:44.392Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/amigoperto-08748252-c7657 [none]
 [debug] [2025-12-12T20:09:44.462Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/amigoperto-08748252-c7657 200
 [debug] [2025-12-12T20:09:44.465Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/amigoperto-08748252-c7657 {"projectNumber":"856736466778","projectId":"amigoperto-08748252-c7657","lifecycleState":"ACTIVE","name":"Firebase app","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-11-16T06:23:23.094135Z"}
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:11.275Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:11.276Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-13T16:21:11.287Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.288Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.289Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.293Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.293Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.335Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.335Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.335Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.337Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.337Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.341Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.341Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.342Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.343Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.343Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.361Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.361Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.362Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.362Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.362Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.365Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.365Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.365Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.366Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.367Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.369Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:11.370Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-13T16:21:11.371Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.371Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.372Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.372Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.372Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.375Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.375Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.375Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.375Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.376Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.378Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.378Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.378Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.378Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.379Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.384Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.384Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.384Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.385Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.385Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.388Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.388Z] Checked if tokens are valid: false, expires at: 1765573783189
+[debug] [2025-12-13T16:21:11.388Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T16:21:11.389Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T16:21:11.389Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.566Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.566Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.596Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.596Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.610Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.610Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.626Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.626Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.660Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.661Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.679Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.679Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.686Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.686Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.700Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-13T16:21:11.700Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.708Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.708Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.732Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.732Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.735Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.735Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.749Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.749Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.767Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.768Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.786Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-13T16:21:11.786Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.799Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.799Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.814Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.814Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.836Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.836Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.857Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.858Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.860Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T16:21:11.860Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T16:21:11.872Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-13T16:21:11.872Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-13T16:21:11.893Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-13T16:21:11.893Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.902Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-13T16:21:11.903Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.909Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-13T16:21:11.909Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.913Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-13T16:21:11.913Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-13T16:21:11.937Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-13T16:21:11.938Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-13T16:21:11.949Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-13T16:21:11.949Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.975Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-13T16:21:11.979Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.983Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-13T16:21:11.983Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:11.994Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-13T16:21:11.994Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-13T16:21:12.020Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-13T16:21:12.021Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.030Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.030Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.035Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.035Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.063Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.064Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.068Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.069Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.081Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.082Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T16:21:12.087Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T16:21:12.087Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:18.384Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:18.386Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T12:37:18.399Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.400Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.401Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.405Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.405Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.447Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.447Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.448Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.448Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.449Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.453Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.453Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.454Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.455Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.455Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.473Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.473Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.473Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.473Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.473Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.477Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.477Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.477Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.477Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.478Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.480Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:18.480Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T12:37:18.482Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.482Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.482Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.483Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.483Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.485Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.485Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.485Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.486Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.486Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.488Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.489Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.489Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.490Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.490Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.497Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.497Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.497Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.498Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.498Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.502Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.502Z] Checked if tokens are valid: false, expires at: 1765646470860
+[debug] [2025-12-14T12:37:18.502Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T12:37:18.504Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T12:37:18.504Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.647Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.648Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.674Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.674Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.679Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.679Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.692Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-14T12:37:18.692Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.702Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.703Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.726Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.727Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.732Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.732Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.749Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.749Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.779Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.779Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.799Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.799Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.845Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.846Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.861Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-14T12:37:18.861Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.884Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.885Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.902Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.903Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.910Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.910Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.925Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.926Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.929Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.929Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.949Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.949Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:18.951Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T12:37:18.952Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T12:37:18.965Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-14T12:37:18.965Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T12:37:19.002Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-14T12:37:19.007Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-14T12:37:19.015Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-14T12:37:19.015Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-14T12:37:19.023Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-14T12:37:19.028Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-14T12:37:19.029Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-14T12:37:19.030Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[debug] [2025-12-14T12:37:19.051Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-14T12:37:19.052Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-14T12:37:19.061Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-14T12:37:19.062Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-14T12:37:19.063Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-14T12:37:19.063Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.077Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.077Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.082Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.084Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T12:37:19.104Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-14T12:37:19.104Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-14T12:37:19.106Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-14T12:37:19.106Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.142Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.142Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.145Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.146Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.160Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.161Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T12:37:19.164Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T12:37:19.164Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T12:37:19.181Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-14T12:37:19.182Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T23:40:59.589Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:40:59.590Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T23:40:59.599Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.600Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.600Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.603Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.603Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.630Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.630Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.630Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.631Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.631Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.634Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.634Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.635Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.635Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.635Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.650Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.650Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.650Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.651Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.651Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.653Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.653Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.654Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.654Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.654Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.656Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:40:59.656Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T23:40:59.657Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.657Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.657Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.657Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.658Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.659Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.660Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.660Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.660Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.660Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.662Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.662Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.662Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.662Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.663Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.668Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.668Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.669Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.669Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.669Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.672Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.672Z] Checked if tokens are valid: false, expires at: 1765719437952
+[debug] [2025-12-14T23:40:59.672Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T23:40:59.673Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T23:40:59.673Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.784Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:40:59.785Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.834Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-14T23:40:59.834Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:40:59.840Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:40:59.840Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.852Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-14T23:40:59.853Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:40:59.865Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:40:59.865Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.879Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-14T23:40:59.879Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:40:59.895Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:40:59.896Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.909Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-14T23:40:59.910Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:40:59.957Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:40:59.957Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:40:59.977Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-14T23:40:59.977Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.005Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:41:00.005Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:41:00.025Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-14T23:41:00.025Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.027Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:41:00.027Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:41:00.041Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-14T23:41:00.041Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.053Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:41:00.053Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:41:00.068Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-14T23:41:00.069Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.071Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:41:00.071Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:41:00.088Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-14T23:41:00.088Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.091Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T23:41:00.091Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T23:41:00.104Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-14T23:41:00.104Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-14T23:41:00.125Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-14T23:41:00.126Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-14T23:41:00.139Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-14T23:41:00.139Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-14T23:41:00.148Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-14T23:41:00.148Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.155Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-14T23:41:00.155Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.158Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-14T23:41:00.158Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.161Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-14T23:41:00.162Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.166Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-14T23:41:00.166Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.209Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-14T23:41:00.210Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-12-14T23:41:00.220Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-14T23:41:00.221Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T23:41:00.232Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.232Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T23:41:00.236Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.237Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T23:41:00.252Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-14T23:41:00.252Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T23:41:00.297Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.297Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T23:41:00.297Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.297Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T23:41:00.300Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.300Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-14T23:41:00.300Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T23:41:00.300Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:45.891Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:45.893Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-18T14:49:45.978Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:45.979Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:45.980Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:45.985Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:45.985Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.031Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.032Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.032Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.033Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.033Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.038Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.038Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.039Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.040Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.040Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.058Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.058Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.058Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.058Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.061Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.064Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.065Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.065Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.066Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.066Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.069Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:46.070Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-18T14:49:46.071Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.071Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.071Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.072Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.072Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.074Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.074Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.074Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.074Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.074Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.077Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.077Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.077Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.077Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.078Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.085Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.085Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.085Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.085Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.085Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.090Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.093Z] Checked if tokens are valid: false, expires at: 1765759259091
+[debug] [2025-12-18T14:49:46.093Z] > refreshing access token with scopes: []
+[debug] [2025-12-18T14:49:46.093Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-18T14:49:46.094Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.231Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.251Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.279Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.279Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.282Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.282Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.315Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.315Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.327Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.327Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.355Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.356Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.453Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.454Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.476Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.476Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.527Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.529Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.559Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-18T14:49:46.559Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.568Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.568Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.595Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [none]
+[debug] [2025-12-18T14:49:46.596Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.600Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.601Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.614Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.614Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.647Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.647Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.678Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.678Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.723Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.728Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.754Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.754Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.756Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-18T14:49:46.757Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-18T14:49:46.770Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-12-18T14:49:46.770Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/amigoperto-08748252-c7657
+[debug] [2025-12-18T14:49:46.793Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-18T14:49:46.794Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.809Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-18T14:49:46.811Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.824Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com 200
+[debug] [2025-12-18T14:49:46.824Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.834Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-18T14:49:46.834Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-18T14:49:46.847Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-18T14:49:46.847Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.866Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com 403
+[debug] [2025-12-18T14:49:46.866Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseio.com [omitted]
+[debug] [2025-12-18T14:49:46.879Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-12-18T14:49:46.879Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.888Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-18T14:49:46.888Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-12-18T14:49:46.911Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-12-18T14:49:46.911Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firebaseapphosting.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:46.931Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:46.932Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:46.943Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:46.943Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[debug] [2025-12-18T14:49:46.961Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com 200
+[debug] [2025-12-18T14:49:46.966Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/amigoperto-08748252-c7657/services/firestore.googleapis.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:47.028Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:47.030Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:47.034Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:47.034Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:47.040Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:47.041Z] > authorizing via signed-in user (alfecjo@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-18T14:49:47.044Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-18T14:49:47.044Z] > authorizing via signed-in user (alfecjo@gmail.com)

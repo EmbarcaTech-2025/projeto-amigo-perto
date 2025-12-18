@@ -1,27 +1,59 @@
 <div class="device-card">
     <div class="device-header">
-        <img src="assets/bluetooth-icon.svg" alt="Bluetooth Icon">
-        <h2>{{ device.name }}</h2>
-        <!-- A linha que exibia o ID foi removida -->
+        <img src="assets/amigoperto.png" alt="AmigoPerto Logo" class="logo">
+        <h2>AmigoPerto</h2>
     </div>
-    <div class="device-details">
-        @if(device.rssi !== undefined) {
-            <div class="detail-item">
-                <span>Força do Sinal (RSSI)</span>
-                <strong>{{ device.rssi }} dBm</strong>
+
+    @if (bluetoothService.device(); as dev) {
+        <div class="device-details">
+            <div class="detail-item name">
+                <span>Dispositivo</span>
+                <strong>{{ dev.name }}</strong>
             </div>
-        }
-        @if(device.distance !== undefined) {
-            <div class="detail-item">
-                <span>Distância Estimada</span>
-                <strong>{{ device.distance }} m</strong>
-            </div>
-        }
-        @if(device.distanceCategory) {
-             <div class="detail-item">
-                <span>Proximidade</span>
-                <strong>{{ device.distanceCategory }}</strong>
-            </div>
-        }
-    </div>
+             @if (bluetoothService.batteryLevel() !== null) {
+                <div class="detail-item battery">
+                    <span>Bateria</span>
+                    <div class="battery-level-container">
+                        <div class="battery-bar" [style.width.%]="bluetoothService.batteryLevel()"></div>
+                        <strong>{{ bluetoothService.batteryLevel() }}%</strong>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="actions-grid">
+            <button class="action-button buzzer" (click)="toggleBuzzer()" [class.active]="isBuzzerOn">
+                <i class="fas fa-volume-up"></i>
+                <span>{{ isBuzzerOn ? 'Parar Buzzer' : 'Tocar Buzzer' }}</span>
+            </button>
+
+            <button class="action-button led" (click)="toggleLed()" [class.active]="isLedOn">
+                <i class="fas fa-lightbulb"></i>
+                <span>{{ isLedOn ? 'Desligar LED' : 'Ligar LED' }}</span>
+            </button>
+
+            <button class="action-button battery-update" (click)="requestBattery()">
+                <i class="fas fa-sync-alt"></i>
+                <span>Atualizar Bateria</span>
+            </button>
+
+            <button class="action-button reboot" (click)="reboot()">
+                <i class="fas fa-power-off"></i>
+                <span>Reiniciar</span>
+            </button>
+        </div>
+
+    } @else {
+        <div class="no-device">
+            <p>Nenhum dispositivo conectado.</p>
+            <p>Clique em "Conectar" para começar.</p>
+        </div>
+    }
+
+     @if (bluetoothService.lastResponse(); as response) {
+        <div class="response-terminal">
+            <pre> > {{ response }}</pre>
+        </div>
+    }
+
 </div>
