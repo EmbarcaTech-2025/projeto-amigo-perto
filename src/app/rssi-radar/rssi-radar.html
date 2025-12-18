@@ -1,12 +1,5 @@
-<div class="radar-container" [class]="proximity() | lowercase">
-  <div class="radar-pulse"></div>
-  <div class="radar-label">
-    <span class="proximity-text">{{ proximity() }}</span>
-    <!-- Mostra o valor do RSSI apenas se não for nulo -->
-    @if (rssi() !== null) {
-      <span class="rssi-value">{{ rssi() }} dBm</span>
-    } @else {
-      <span class="rssi-value">...</span>
-    }
-  </div>
+<div class="radar-container" [class]="proximidade() | lowercase">
+    <div class="radar-sweep"></div>
+    <div class="dot" [style]="dotStyle()"></div>
+    <span class="proximity-text">{{ proximidade() }}</span>
 </div>
