@@ -1,59 +1,58 @@
-# Myapp
+# Amigo Perto
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.8.
+O "Amigo Perto" é um aplicativo da web progressivo (PWA) construído com as versões mais recentes do Angular. Ele foi projetado para se conectar e interagir com dispositivos Bluetooth de Baixa Energia (BLE). O foco principal do aplicativo é permitir que o usuário controle um dispositivo remotamente e monitore sua proximidade em tempo real através de uma interface de radar intuitiva.
 
-## Development server
+## Principais Funcionalidades
 
-To start a local development server, run:
+*   **Conexão Bluetooth (BLE):** Utiliza a **Web Bluetooth API** para escanear e se conectar a periféricos BLE. A conexão é iniciada pelo usuário para garantir a compatibilidade e segurança.
+*   **Controle Remoto:** Apresenta um D-Pad interativo que envia comandos para o dispositivo conectado através de características Bluetooth específicas.
+*   **Radar de Proximidade:**
+    *   Mede a força do sinal recebido (RSSI) em tempo real para estimar a distância do dispositivo.
+    *   Apresenta um radar visual que classifica a proximidade em "Perto", "Média" e "Longe".
+*   **Alertas Sensoriais:**
+    *   **Visual:** A tela do radar treme quando o dispositivo entra no estado "Longe", fornecendo um feedback tátil imediato.
+    *   **Auditivo:** Um bipe intermitente, gerado com a **Web Audio API**, é acionado quando o dispositivo está "Longe".
+*   **Interface Reativa:** Construído com **Angular Signals** para um gerenciamento de estado moderno, eficiente e sem o uso de RxJS para o estado local.
+*   **Arquitetura Moderna:**
+    *   **Componentes Standalone:** Arquitetura 100% baseada em componentes, diretivas e pipes standalone.
+    *   **OnPush Change Detection:** Todos os componentes usam `ChangeDetectionStrategy.OnPush` para um desempenho otimizado.
+    *   **Novo Control Flow:** Utiliza as diretivas `@if`, `@for` e `@switch` nativas para uma lógica de template mais limpa e declarativa.
+
+## Tecnologias Utilizadas
+
+*   **Framework:** Angular 21+
+*   **State Management:** Angular Signals
+*   **Estilização:** CSS nativo com Variáveis CSS para um design coeso e fácil de manter.
+*   **APIs do Navegador:** Web Bluetooth API, Web Audio API
+*   **Build:** Angular CLI
+*   **Hospedagem:** Firebase Hosting
+
+---
+
+## Servidor de Desenvolvimento
+
+Para iniciar um servidor de desenvolvimento local, execute:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Navegue para `http://localhost:4200/`. O aplicativo será recarregado automaticamente se você alterar qualquer um dos arquivos de origem.
 
-## Code scaffolding
+## Build
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Para compilar o projeto para produção, execute:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Os artefatos da compilação serão armazenados no diretório `dist/`.
 
-## Running unit tests
+## Testes Unitários
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Para executar os testes unitários com o Vitest, use o seguinte comando:
 
 ```bash
 ng test
 ```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
