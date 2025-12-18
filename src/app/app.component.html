@@ -1,18 +1,51 @@
-<main class="main-container">
-  <header class="app-header">
-    <h1>Amigo Perto</h1>
-    <p>Conecte-se e monitore seu dispositivo Bluetooth.</p>
-  </header>
+<div class="app-container">
+  <h1>Amigo Perto</h1>
 
-  <div class="content-area">
-    <app-device-info 
-      [deviceName]="bluetoothService.deviceInfo()?.name ?? null" 
-      [isConnected]="bluetoothService.connectionStatus() === 'connected'"
-      (connect)="onConnect()" 
-      (disconnect)="onDisconnect()" />
+  <div class="status-container">
+    <!-- A lógica de status agora reflete os três estágios -->
+    @if (bluetoothService.isConnecting()) {
+      <p class="status">Conectando ao dispositivo...</p>
+    } @else if (bluetoothService.isConnected()) {
+      <p class="status">Conectado ao Amigo Perto!</p>
+    } @else if (bluetoothService.isScanning()) {
+      <p class="status">Procurando dispositivo...</p>
+    } @else {
+      <p class="status">Dispositivo desconectado.</p>
+    }
 
-    @if (bluetoothService.connectionStatus() === 'connected') {
-      <app-rssi-radar [rssi]="bluetoothService.rssi()" />
+    @if (bluetoothService.error()) {
+      <p class="error-message">{{ bluetoothService.error() }}</p>
     }
   </div>
-</main>
+
+  <!-- Estado CONECTADO -->
+  @if (bluetoothService.isConnected()) {
+    <!-- FIX: Explicitly cast the event to a string to resolve template error -->
+    <app-control-pad (command)="bluetoothService.sendCommand($any($event))" />
+    <button class="disconnect-button" (click)="bluetoothService.disconnect()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a7.5 7.5 0 1 0-11.4 0"/><path d="M12 2v5"/></svg>
+      Desconectar
+    </button>
+  }
+  <!-- Estado ESCANEANDO -->
+  @else if (bluetoothService.isScanning()) {
+    <!-- O radar agora mostra o RSSI real durante o escaneamento -->
+    <app-rssi-radar [rssi]="bluetoothService.rssi()" />
+
+    <div class="button-group">
+      <button class="connect-button" (click)="bluetoothService.connectToDevice()">
+        Conectar
+      </button>
+      <button class="cancel-button" (click)="bluetoothService.disconnect()">
+        Cancelar
+      </button>
+    </div>
+  }
+  <!-- Estado DESCONECTADO -->
+  @else {
+    <button class="connect-button" (click)="bluetoothService.startScan()" [disabled]="bluetoothService.isConnecting()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a7.5 7.5 0 1 0-11.4 0"/><path d="M12 2v5"/></svg>
+      Procurar Amigo
+    </button>
+  }
+</div>

@@ -1,7 +1,5 @@
+import { ChangeDetectionStrategy, Component, input, signal, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-
-type Proximity = 'unknown' | 'longe' | 'medio' | 'perto';
 
 @Component({
   selector: 'app-rssi-radar',
@@ -10,29 +8,46 @@ type Proximity = 'unknown' | 'longe' | 'medio' | 'perto';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule]
 })
-export class RssiRadarComponent {
-  public rssi = input<number | null>(null);
+export class RssiRadarComponent implements OnInit, OnDestroy {
+  device = input.required<BluetoothDevice>();
 
-  public proximity = computed<Proximity>(() => {
-    const rssiVal = this.rssi();
-    if (rssiVal === null) return 'unknown';
-    if (rssiVal < -80) return 'longe';
-    if (rssiVal < -60) return 'medio';
-    return 'perto';
-  });
+  rssi = signal(0);
+  proximity = signal('unknown'); // e.g., 'very-close', 'close', 'far'
+  proximityText = signal('Unknown'); // e.g., 'Very Close', 'Close', 'Far'
 
-  public proximityText = computed(() => {
-    switch (this.proximity()) {
-      case 'perto':
-        return 'Muito Perto';
-      case 'medio':
-        return 'Distância Média';
-      case 'longe':
-        return 'Sinal Fraco - Risco de Perda';
-      default:
-        return 'Procurando sinal...';
+  private intervalId?: any;
+
+  ngOnInit(): void {
+    // Simulate RSSI updates
+    this.intervalId = setInterval(() => {
+      // Simulate a value between -100 and -30
+      const simulatedRssi = Math.floor(Math.random() * 70) - 100;
+      this.updateRssi(simulatedRssi);
+    }, 2000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
     }
-  });
+  }
 
-  public shouldShake = computed(() => this.proximity() === 'longe');
+  private calculateProximity(rssi: number): { id: string; text: string } {
+    if (rssi > -50) {
+      return { id: 'proximity-very-close', text: 'Very Close' };
+    } else if (rssi > -70) {
+      return { id: 'proximity-close', text: 'Close' };
+    } else if (rssi > -90) {
+      return { id: 'proximity-far', text: 'Far' };
+    } else {
+      return { id: 'proximity-very-far', text: 'Very Far' };
+    }
+  }
+
+  updateRssi(newRssi: number): void {
+    const proximityInfo = this.calculateProximity(newRssi);
+    this.rssi.set(newRssi);
+    this.proximity.set(proximityInfo.id);
+    this.proximityText.set(proximityInfo.text);
+  }
 }

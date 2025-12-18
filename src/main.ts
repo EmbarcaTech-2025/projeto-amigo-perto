@@ -1,6 +1,10 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
+import { isDevMode } from '@angular/core';
+import { enableBluetoothSimulation } from './app/bluetooth-simulation';
 
-bootstrapApplication(AppComponent, appConfig)
-  .catch((err) => console.error(err));
+if (isDevMode()) {
+  enableBluetoothSimulation();
+}
+
+bootstrapApplication(AppComponent).catch((err) => console.error(err));

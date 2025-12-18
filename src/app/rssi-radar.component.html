@@ -1,16 +1,6 @@
-<div class="radar-container" [class.shake]="shouldShake()">
-  <div class="radar" [class]="'proximity-' + proximity()">
-    <div class="radar-dot"></div>
-    <div class="radar-rings">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-    </div>
-  </div>
-  <div class="radar-info">
-    @if (rssi() !== null) {
-      <div class="rssi-value">{{ rssi() }} dBm</div>
-    }
-    <div class="proximity-status">{{ proximityText() }}</div>
+<div class="rssi-radar">
+  <div class="radar-display" [class]="proximity()">
+    <div class="rssi-value">{{ rssi() }} dBm</div>
+    <div class="proximity">{{ proximityText() }}</div>
   </div>
 </div>

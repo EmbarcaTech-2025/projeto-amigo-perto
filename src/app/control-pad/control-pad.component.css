@@ -1,0 +1,51 @@
+.d-pad-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.d-pad {
+  display: grid;
+  grid-template-areas:
+    ". up ."
+    "left center right"
+    ". down .";
+  grid-template-rows: 70px 70px 70px;
+  grid-template-columns: 70px 70px 70px;
+  gap: 5px;
+}
+
+.d-pad button {
+  border: none;
+  border-radius: 10px;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: var(--d-pad-color);
+}
+
+.d-pad button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--primary-color);
+}
+
+.up, .down, .left, .right {
+  background-color: var(--primary-color); /* Cor primária para setas */
+}
+
+.up { grid-area: up; }
+.down { grid-area: down; }
+.left { grid-area: left; }
+.right { grid-area: right; }
+
+.center {
+  grid-area: center;
+  background-color: var(--d-pad-center-color);
+  border-radius: 50%;
+}
+
+.center:hover {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}

@@ -1,123 +1,115 @@
-import { Injectable, signal, WritableSignal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
-// UUIDs for the Nordic UART Service (NUS)
-const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const NUS_RX_CHARACTERISTIC_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const NUS_TX_CHARACTERISTIC_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+// FIX: UUIDs atualizados com base no feedback do dispositivo do usuário.
+const CUSTOM_SERVICE_UUID = '12345678-abcd-efab-cdef-123456789abc';
+const CUSTOM_RX_CHARACTERISTIC_UUID = '12345679-abcd-efab-cdef-123456789abc';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class BluetoothService {
   private device: BluetoothDevice | null = null;
-  private txCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private server: BluetoothRemoteGATTServer | null = null;
+  // A característica TX não é necessária, pois apenas enviamos comandos (RX).
   private rxCharacteristic: BluetoothRemoteGATTCharacteristic | null = null;
-  private leScan: BluetoothLEScan | null = null;
+  private abortController: AbortController | null = null;
 
-  // State Signals
-  public readonly connectionStatus = signal<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  public readonly rssi: WritableSignal<number | null> = signal<number | null>(null);
-  public readonly deviceInfo = signal<{ name: string; id: string } | null>(null);
+  public isConnected = signal(false);
+  public isConnecting = signal(false);
+  public isScanning = signal(false);
+  public rssi = signal<number | null>(null);
+  public error = signal<string | null>(null);
 
-  async connect() {
+  async startScan() {
+    this.error.set(null);
+    this.isScanning.set(true);
+    this.rssi.set(null);
+
     try {
-      if (!navigator.bluetooth) {
-        throw new Error('Web Bluetooth API is not available in this browser.');
-      }
+      this.abortController = new AbortController();
 
-      this.connectionStatus.set('connecting');
-
-      // Request the device
+      // FIX: Filtro reativado com o Service UUID correto. A busca volta a ser automática.
       this.device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [NUS_SERVICE_UUID],
+        filters: [{ services: [CUSTOM_SERVICE_UUID] }],
+        optionalServices: [CUSTOM_SERVICE_UUID],
       });
 
-      this.deviceInfo.set({ name: this.device.name ?? 'Unknown Device', id: this.device.id });
-      this.device.addEventListener('gattserverdisconnected', this.handleDisconnection.bind(this));
+      if (!this.device) {
+        throw new Error('Nenhum dispositivo selecionado.');
+      }
 
-      // Connect to the GATT server
-      await this.device.gatt?.connect();
-      this.connectionStatus.set('connected');
+      this.device.addEventListener('advertisementreceived', (event: any) => {
+        this.rssi.set(event.rssi);
+      });
 
-      // Start RSSI monitoring right after connecting
-      this.startRssiMonitoring();
+      await this.device.watchAdvertisements({ signal: this.abortController.signal });
 
-      // Try to get the NUS service, but don't fail if it's not there
-      await this.setupNusService();
-
-    } catch (error) {
-      this.handleError(error);
+    } catch (e: any) {
+      console.error(e);
+      if (e.name !== 'NotFoundError') {
+        this.error.set(`Erro ao escanear: ${e.message}`);
+      }
+      this.isScanning.set(false);
     }
+  }
+
+  async connectToDevice() {
+    if (!this.device) {
+      this.error.set('Nenhum dispositivo para conectar.');
+      return;
+    }
+
+    this.isConnecting.set(true);
+    this.isScanning.set(false);
+    this.error.set(null);
+
+    this.abortController?.abort();
+
+    try {
+      this.device.addEventListener('gattserverdisconnected', () => this.handleDisconnect());
+      this.server = await this.device.gatt?.connect() ?? null;
+      const service = await this.server?.getPrimaryService(CUSTOM_SERVICE_UUID);
+      // FIX: Procura pela característica correta de escrita (RX do ponto de vista do app).
+      this.rxCharacteristic = await service?.getCharacteristic(CUSTOM_RX_CHARACTERISTIC_UUID) ?? null;
+
+      this.isConnected.set(true);
+    } catch (e: any) {
+      console.error(e);
+      this.error.set(`Erro ao conectar: ${e.message}`);
+    } finally {
+      this.isConnecting.set(false);
+    }
+  }
+
+  async sendCommand(command: string) {
+    if (!this.rxCharacteristic) {
+      this.error.set('Característica de escrita não encontrada.');
+      return;
+    }
+    const encoder = new TextEncoder();
+    await this.rxCharacteristic.writeValue(encoder.encode(command + '\n'));
   }
 
   disconnect() {
-    this.leScan?.stop();
-    this.leScan = null;
-    this.device?.gatt?.disconnect();
-  }
-
-  private handleDisconnection() {
-    this.connectionStatus.set('disconnected');
-    this.rssi.set(null);
-    this.deviceInfo.set(null);
-    this.leScan?.stop();
-    this.leScan = null;
-  }
-
-  private async setupNusService() {
-    if (!this.device?.gatt) return;
-
-    try {
-      const server = this.device.gatt;
-      const service = await server.getPrimaryService(NUS_SERVICE_UUID);
-
-      this.txCharacteristic = await service.getCharacteristic(NUS_TX_CHARACTERISTIC_UUID);
-      this.rxCharacteristic = await service.getCharacteristic(NUS_RX_CHARACTERISTIC_UUID);
-
-      await this.txCharacteristic.startNotifications();
-      this.txCharacteristic.addEventListener('characteristicvaluechanged', this.handleNotifications.bind(this));
-      console.log('Nordic UART Service (NUS) is set up.');
-    } catch (error) {
-      console.warn('Nordic UART Service (NUS) not found or failed to set up. RSSI monitoring will continue.', error);
-    }
-  }
-
-  private async startRssiMonitoring() {
-    if (!this.device) return;
-
-    try {
-      // Use requestLEScan to listen for advertisements
-      this.leScan = await navigator.bluetooth.requestLEScan({ 
-        filters: [{ services: [NUS_SERVICE_UUID] }],
-       });
-
-      navigator.bluetooth.addEventListener('advertisementreceived', (event: BluetoothAdvertisingEvent) => {
-        // Check if the advertisement is from the connected device
-        if (event.device.id === this.device?.id) {
-          if (event.rssi) {
-             this.rssi.set(event.rssi);
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Could not start RSSI monitoring:', error);
-    }
-  }
-
-  private handleNotifications(event: Event) {
-    const value = (event.target as BluetoothRemoteGATTCharacteristic).value;
-    // Handle incoming data from the device
-  }
-
-  private handleError(error: unknown) {
-    // Ignore user cancellation errors
-    if (error instanceof Error && error.name === 'NotFoundError') {
-      this.connectionStatus.set('disconnected');
+    if (this.isScanning()) {
+      this.abortController?.abort();
+      this.isScanning.set(false);
+      console.log('Escaneamento cancelado.');
       return;
     }
-    console.error('Bluetooth Error:', error);
-    this.disconnect();
+
+    if (this.server?.connected) {
+      this.server.disconnect();
+    }
+  }
+
+  private handleDisconnect() {
+    this.isConnected.set(false);
+    this.isConnecting.set(false);
+    this.isScanning.set(false);
+    this.rssi.set(null);
+    this.device = null;
+    this.server = null;
+    this.rxCharacteristic = null;
+    this.abortController = null;
+    console.log('Dispositivo desconectado.');
   }
 }
