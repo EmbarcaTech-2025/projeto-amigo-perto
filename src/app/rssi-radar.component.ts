@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { BluetoothService, Proximity } from './bluetooth.service';
 
 @Component({
   selector: 'app-rssi-radar',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './rssi-radar.component.html',
   styleUrls: ['./rssi-radar.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

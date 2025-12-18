@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { BluetoothService } from './bluetooth.service';
 
 @Component({
   selector: 'app-device-info',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './device-info.component.html',
   styleUrls: ['./device-info.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
