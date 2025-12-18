@@ -1,0 +1,34 @@
+<div class="radar-container" [class.shake]="shouldShake()">
+    <div class="radar-header">
+        <h2>Observando o Amigo</h2>
+        <p>Aproxime-se para conectar</p>
+    </div>
+    <div class="radar" [class]="'proximity-' + bluetoothService.proximity()">
+        <div class="radar-dot"></div>
+        <div class="radar-rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+        </div>
+    </div>
+    <div class="radar-info">
+        @if(bluetoothService.foundDevice(); as device) {
+            <div class="device-name">{{ device.name }}</div>
+        }
+        @if(bluetoothService.rssi(); as rssi) {
+            <div class="rssi-value">{{ rssi }} dBm</div>
+        }
+        <div class="proximity-status">{{ getProximityText(bluetoothService.proximity()) }}</div>
+    </div>
+
+    <button class="connect-now-button" (click)="connect()" [disabled]="bluetoothService.connectionStatus() === 'connecting'">
+         @if (bluetoothService.connectionStatus() === 'connecting') {
+            <div class="spinner"></div>
+            <span>Conectando...</span>
+        } @else {
+            <i class="fas fa-link"></i>
+            <span>Conectar no Amigo</span>
+        } 
+    </button>
+
+</div>

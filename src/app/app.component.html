@@ -1,30 +1,50 @@
-<header class="header">
-  <img ngSrc="assets/amigoperto.png" alt="AmigoPerto Logo" class="logo" width="40" height="40">
-  <h1>AmigoPerto</h1>
-  <button 
-    class="connect-button"
-    (click)="bluetoothService.connectionStatus() === 'connected' ? bluetoothService.disconnect() : bluetoothService.findAndConnect()"
-    [disabled]="bluetoothService.isLoading()"
-    [class.connected]="bluetoothService.connectionStatus() === 'connected'"
-  >
-    @if (bluetoothService.isLoading()) {
-      <div class="spinner"></div>
-    } @else {
-      <i class="fas" [class.fa-bluetooth-b]="bluetoothService.connectionStatus() !== 'connected'" [class.fa-unlink]="bluetoothService.connectionStatus() === 'connected'"></i>
+<header class="app-header">
+    <h1>AmigoPerto</h1>
+    @if (bluetoothService.connectionStatus() === 'connected') {
+        <button class="header-button disconnect" (click)="bluetoothService.disconnect()">
+            <i class="fas fa-power-off"></i>
+            <span>Desconectar</span>
+        </button>
     }
-    <span>{{ bluetoothService.connectionStatus() === 'connected' ? 'Desconectar' : 'Conectar' }}</span>
-  </button>
 </header>
 
 <main class="main-content">
-  <app-device-info />
+    @switch (bluetoothService.connectionStatus()) {
+        @case ('disconnected') {
+            <div class="initial-state">
+                <i class="fas fa-search-location icon"></i>
+                <h2>Encontre seu Amigo...</h2>
+                <p>Use o radar para localizar seu amigo antes de conectar.</p>
+                <button class="scan-button" (click)="bluetoothService.startScan()" [disabled]="bluetoothService.isLoading()">
+                     @if (bluetoothService.isLoading()) {
+                        <div class="spinner"></div>
+                        <span>Procurando...</span>
+                    } @else {
+                        <i class="fas fa-satellite-dish"></i>
+                        <span>Buscar Amigo</span>
+                    }
+                </button>
+            </div>
+        }
+        @case ('searching') {
+             <div class="initial-state">
+                <div class="spinner-large"></div>
+                <h2>Procurando Amigo...</h2>
+                <p>Por favor, selecione seu Amigo na janela que aparecerá.</p>
+            </div>
+        }
+        @case ('watching') {
+            <app-rssi-radar />
+        }
+        @case ('connecting') {
+            <app-rssi-radar />
+        }
+        @case ('connected') {
+            <app-device-info />
+        }
+    }
 </main>
 
-<footer class="footer">
-   @if(bluetoothService.error(); as errorMsg) {
-      <div class="status-message" [class.error]="bluetoothService.connectionStatus() === 'disconnected' && !bluetoothService.isLoading()">
-        <i class="fas fa-info-circle"></i>
-        <span>{{ errorMsg }}</span>
-      </div>
-   }
+<footer class="app-footer">
+    <span>{{ bluetoothService.error() }}</span>
 </footer>

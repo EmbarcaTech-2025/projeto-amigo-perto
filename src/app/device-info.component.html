@@ -1,13 +1,13 @@
 <div class="device-card">
     <div class="device-header">
-        <img src="assets/amigoperto.png" alt="AmigoPerto Logo" class="logo">
+        <img src="assets/amigoperto.png" alt="AmigoPerto Logo" class="logo device-image">
         <h2>AmigoPerto</h2>
     </div>
 
-    @if (bluetoothService.device(); as dev) {
+    @if (bluetoothService.connectedDevice(); as dev) {
         <div class="device-details">
             <div class="detail-item name">
-                <span>Dispositivo</span>
+                <span>Amigo</span>
                 <strong>{{ dev.name }}</strong>
             </div>
              @if (bluetoothService.batteryLevel() !== null) {
@@ -45,8 +45,8 @@
 
     } @else {
         <div class="no-device">
-            <p>Nenhum dispositivo conectado.</p>
-            <p>Clique em "Conectar" para começar.</p>
+            <p>Nenhum Amigo conectado.</p>
+            <p>Clique em "Buscar Amigo" para começar.</p>
         </div>
     }
 
