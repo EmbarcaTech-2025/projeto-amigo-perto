@@ -7,9 +7,10 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ControlPadComponent {
-  command = output<number>();
+  command = output<string>();
+  disconnect = output<void>();
 
-  onCommand(command: number) {
+  onCommand(command: string) {
     this.command.emit(command);
   }
 }

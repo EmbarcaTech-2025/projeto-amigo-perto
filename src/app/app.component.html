@@ -20,12 +20,10 @@
 
   <!-- Estado CONECTADO -->
   @if (bluetoothService.isConnected()) {
-    <!-- FIX: Explicitly cast the event to a string to resolve template error -->
-    <app-control-pad (command)="bluetoothService.sendCommand($any($event))" />
-    <button class="disconnect-button" (click)="bluetoothService.disconnect()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a7.5 7.5 0 1 0-11.4 0"/><path d="M12 2v5"/></svg>
-      Desconectar
-    </button>
+    <!-- O botão Desconectar foi movido para o control-pad -->
+    <app-control-pad 
+      (command)="bluetoothService.sendCommand($event)" 
+      (disconnect)="bluetoothService.disconnect()" />
   }
   <!-- Estado ESCANEANDO -->
   @else if (bluetoothService.isScanning()) {
