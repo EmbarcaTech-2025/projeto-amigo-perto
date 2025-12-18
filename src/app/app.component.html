@@ -1,50 +1,18 @@
-<header class="app-header">
-    <h1>AmigoPerto</h1>
+<main class="main-container">
+  <header class="app-header">
+    <h1>Amigo Perto</h1>
+    <p>Conecte-se e monitore seu dispositivo Bluetooth.</p>
+  </header>
+
+  <div class="content-area">
+    <app-device-info 
+      [deviceName]="bluetoothService.deviceInfo()?.name ?? null" 
+      [isConnected]="bluetoothService.connectionStatus() === 'connected'"
+      (connect)="onConnect()" 
+      (disconnect)="onDisconnect()" />
+
     @if (bluetoothService.connectionStatus() === 'connected') {
-        <button class="header-button disconnect" (click)="bluetoothService.disconnect()">
-            <i class="fas fa-power-off"></i>
-            <span>Desconectar</span>
-        </button>
+      <app-rssi-radar [rssi]="bluetoothService.rssi()" />
     }
-</header>
-
-<main class="main-content">
-    @switch (bluetoothService.connectionStatus()) {
-        @case ('disconnected') {
-            <div class="initial-state">
-                <i class="fas fa-search-location icon"></i>
-                <h2>Encontre seu Amigo...</h2>
-                <p>Use o radar para localizar seu amigo antes de conectar.</p>
-                <button class="scan-button" (click)="bluetoothService.startScan()" [disabled]="bluetoothService.isLoading()">
-                     @if (bluetoothService.isLoading()) {
-                        <div class="spinner"></div>
-                        <span>Procurando...</span>
-                    } @else {
-                        <i class="fas fa-satellite-dish"></i>
-                        <span>Buscar Amigo</span>
-                    }
-                </button>
-            </div>
-        }
-        @case ('searching') {
-             <div class="initial-state">
-                <div class="spinner-large"></div>
-                <h2>Procurando Amigo...</h2>
-                <p>Por favor, selecione seu Amigo na janela que aparecerá.</p>
-            </div>
-        }
-        @case ('watching') {
-            <app-rssi-radar />
-        }
-        @case ('connecting') {
-            <app-rssi-radar />
-        }
-        @case ('connected') {
-            <app-device-info />
-        }
-    }
+  </div>
 </main>
-
-<footer class="app-footer">
-    <span>{{ bluetoothService.error() }}</span>
-</footer>

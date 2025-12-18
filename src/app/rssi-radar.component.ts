@@ -1,21 +1,28 @@
-import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { BluetoothService, Proximity } from './bluetooth.service';
+type Proximity = 'unknown' | 'longe' | 'medio' | 'perto';
 
 @Component({
   selector: 'app-rssi-radar',
-  imports: [],
   templateUrl: './rssi-radar.component.html',
   styleUrls: ['./rssi-radar.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule]
 })
 export class RssiRadarComponent {
-  public bluetoothService = inject(BluetoothService);
+  public rssi = input<number | null>(null);
 
-  readonly shouldShake = computed(() => this.bluetoothService.proximity() === 'longe');
+  public proximity = computed<Proximity>(() => {
+    const rssiVal = this.rssi();
+    if (rssiVal === null) return 'unknown';
+    if (rssiVal < -80) return 'longe';
+    if (rssiVal < -60) return 'medio';
+    return 'perto';
+  });
 
-  getProximityText(proximity: Proximity): string {
-    switch (proximity) {
+  public proximityText = computed(() => {
+    switch (this.proximity()) {
       case 'perto':
         return 'Muito Perto';
       case 'medio':
@@ -25,9 +32,7 @@ export class RssiRadarComponent {
       default:
         return 'Procurando sinal...';
     }
-  }
+  });
 
-  connect() {
-    this.bluetoothService.connect();
-  }
+  public shouldShake = computed(() => this.proximity() === 'longe');
 }

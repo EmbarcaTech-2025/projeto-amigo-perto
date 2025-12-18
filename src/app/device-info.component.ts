@@ -1,36 +1,31 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-
-import { BluetoothService } from './bluetooth.service';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 
 @Component({
   selector: 'app-device-info',
-  imports: [],
   templateUrl: './device-info.component.html',
   styleUrls: ['./device-info.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule]
 })
 export class DeviceInfoComponent {
-  bluetoothService = inject(BluetoothService);
+  // Inputs
+  public deviceName = input<string | null>(null);
+  public isConnected = input(false);
 
-  // Signals for local UI state
-  isBuzzerOn = false;
-  isLedOn = false;
+  // Outputs
+  public connect = output<void>();
+  public disconnect = output<void>();
 
-  toggleBuzzer() {
-    this.isBuzzerOn = !this.isBuzzerOn;
-    this.bluetoothService.toggleBuzzer(this.isBuzzerOn);
+  // Local State
+  public isBuzzerOn = signal(false);
+  public isLedOn = signal(false);
+
+  public toggleBuzzer() {
+    this.isBuzzerOn.update(v => !v);
   }
 
-  toggleLed() {
-    this.isLedOn = !this.isLedOn;
-    this.bluetoothService.toggleLed(this.isLedOn);
-  }
-
-  reboot() {
-    this.bluetoothService.rebootDevice();
-  }
-
-  requestBattery() {
-    this.bluetoothService.requestBatteryLevelUpdate();
+  public toggleLed() {
+    this.isLedOn.update(v => !v);
   }
 }

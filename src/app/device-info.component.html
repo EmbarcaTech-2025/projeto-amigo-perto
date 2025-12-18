@@ -1,59 +1,17 @@
-<div class="device-card">
+<div class="device-info-card">
+  @if (isConnected()) {
     <div class="device-header">
-        <img src="assets/amigoperto.png" alt="AmigoPerto Logo" class="logo device-image">
-        <h2>AmigoPerto</h2>
+      <h3>{{ deviceName() }}</h3>
+      <button class="disconnect-button" (click)="disconnect.emit()">Disconnect</button>
     </div>
-
-    @if (bluetoothService.connectedDevice(); as dev) {
-        <div class="device-details">
-            <div class="detail-item name">
-                <span>Amigo</span>
-                <strong>{{ dev.name }}</strong>
-            </div>
-             @if (bluetoothService.batteryLevel() !== null) {
-                <div class="detail-item battery">
-                    <span>Bateria</span>
-                    <div class="battery-level-container">
-                        <div class="battery-bar" [style.width.%]="bluetoothService.batteryLevel()"></div>
-                        <strong>{{ bluetoothService.batteryLevel() }}%</strong>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div class="actions-grid">
-            <button class="action-button buzzer" (click)="toggleBuzzer()" [class.active]="isBuzzerOn">
-                <i class="fas fa-volume-up"></i>
-                <span>{{ isBuzzerOn ? 'Parar Buzzer' : 'Tocar Buzzer' }}</span>
-            </button>
-
-            <button class="action-button led" (click)="toggleLed()" [class.active]="isLedOn">
-                <i class="fas fa-lightbulb"></i>
-                <span>{{ isLedOn ? 'Desligar LED' : 'Ligar LED' }}</span>
-            </button>
-
-            <button class="action-button battery-update" (click)="requestBattery()">
-                <i class="fas fa-sync-alt"></i>
-                <span>Atualizar Bateria</span>
-            </button>
-
-            <button class="action-button reboot" (click)="reboot()">
-                <i class="fas fa-power-off"></i>
-                <span>Reiniciar</span>
-            </button>
-        </div>
-
-    } @else {
-        <div class="no-device">
-            <p>Nenhum Amigo conectado.</p>
-            <p>Clique em "Buscar Amigo" para começar.</p>
-        </div>
-    }
-
-     @if (bluetoothService.lastResponse(); as response) {
-        <div class="response-terminal">
-            <pre> > {{ response }}</pre>
-        </div>
-    }
-
+    <div class="device-controls">
+      <button (click)="toggleBuzzer()" [class.active]="isBuzzerOn()">Buzzer</button>
+      <button (click)="toggleLed()" [class.active]="isLedOn()">LED</button>
+    </div>
+  } @else {
+    <div class="no-device">
+      <p>No device connected.</p>
+      <button class="connect-button" (click)="connect.emit()">Connect to Device</button>
+    </div>
+  }
 </div>
