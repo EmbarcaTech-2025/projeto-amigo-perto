@@ -16,7 +16,6 @@ O "Amigo Perto" é um aplicativo da web progressivo (PWA) construído com as ver
 *   **Arquitetura Moderna:**
     *   **Componentes Standalone:** Arquitetura 100% baseada em componentes, diretivas e pipes standalone.
     *   **OnPush Change Detection:** Todos os componentes usam `ChangeDetectionStrategy.OnPush` para um desempenho otimizado.
-    *   **Novo Control Flow:** Utiliza as diretivas `@if`, `@for` e `@switch` nativas para uma lógica de template mais limpa e declarativa.
 
 ## Tecnologias Utilizadas
 
