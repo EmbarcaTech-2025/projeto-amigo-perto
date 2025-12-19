@@ -1,8 +1,8 @@
+
 <div class="app-container">
   <h1>Amigo Perto</h1>
 
   <div class="status-container">
-    <!-- A lógica de status agora reflete os três estágios -->
     @if (bluetoothService.isConnecting()) {
       <p class="status">Conectando ao dispositivo...</p>
     } @else if (bluetoothService.isConnected()) {
@@ -20,14 +20,17 @@
 
   <!-- Estado CONECTADO -->
   @if (bluetoothService.isConnected()) {
-    <!-- O botão Desconectar foi movido para o control-pad -->
+    <div class="connected-status">
+      <app-battery-indicator />
+      <!-- Mover o radar para cá fará mais sentido no futuro -->
+    </div>
+    
     <app-control-pad 
       (command)="bluetoothService.sendCommand($event)" 
       (disconnect)="bluetoothService.disconnect()" />
   }
   <!-- Estado ESCANEANDO -->
   @else if (bluetoothService.isScanning()) {
-    <!-- O radar agora mostra o RSSI real durante o escaneamento -->
     <app-rssi-radar [rssi]="bluetoothService.rssi()" />
 
     <div class="button-group">

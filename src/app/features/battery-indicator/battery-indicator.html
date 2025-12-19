@@ -1,0 +1,9 @@
+@if (level() !== null) {
+  <div class="battery-container">
+    <span 
+      class="material-symbols-outlined battery-icon {{ colorClass() }}"
+      aria-hidden="true"
+      >{{ icon() }}</span>
+    <span class="battery-level">{{ level() }}%</span>
+  </div>
+}

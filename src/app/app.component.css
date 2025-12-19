@@ -1,96 +1,96 @@
-/* Estilos existentes */
-.app-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #1a1a1a;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  color: #ecf0f1;
-  border: 1px solid #333;
+
+:host {
   display: flex;
-  flex-direction: column;
-  align-items: center; /* Centraliza o conteúdo */
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #e0e0e0; 
+  font-family: 'Roboto', sans-serif;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 h1 {
-  font-family: 'Orbitron', sans-serif;
-  color: #3498db;
+  color: #555;
   font-size: 2.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 30px;
+  font-weight: 300;
 }
 
 .status-container {
-  margin-bottom: 2rem;
-  min-height: 40px; /* Garante espaço para mensagens */
+  min-height: 60px;
 }
 
 .status {
-  color: #95a5a6;
-  font-size: 1.1rem;
+  color: #777;
+  font-size: 1rem;
+  min-height: 24px;
 }
 
 .error-message {
-  color: #e74c3c;
-  background-color: rgba(231, 76, 60, 0.1);
-  padding: 0.5rem;
-  border-radius: 6px;
+  color: #d32f2f;
+  background-color: #ffebee;
+  border: 1px solid #d32f2f;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
 }
 
-/* Grupo de botões */
-.button-group {
-  display: flex;
-  gap: 1rem; /* Espaço entre os botões */
-  margin-top: 2rem;
-}
-
-/* Estilos de botões genéricos */
-.connect-button,
-.disconnect-button,
-.cancel-button {
+.connect-button, .cancel-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 12px 24px;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  padding: 15px 30px;
   border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: #e0e0e0;
+  box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff;
+  color: #555;
+  font-weight: 500;
+  margin: 10px;
 }
 
-.connect-button {
-  background: linear-gradient(145deg, #3498db, #2980b9);
-  color: white;
+.connect-button:hover, .cancel-button:hover {
+  color: #388e3c;
 }
 
-.connect-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
-
-.disconnect-button,
-.cancel-button {
-  background: linear-gradient(145deg, #e74c3c, #c0392b);
-  color: white;
-}
-
-.disconnect-button:hover,
-.cancel-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+.connect-button:active, .cancel-button:active {
+  box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff;
 }
 
 .connect-button:disabled {
-  background: #555;
-  cursor: not-allowed;
   opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: 4px 4px 8px #bebebe, -4px -4px 8px #ffffff; 
 }
 
-svg {
-  width: 20px;
-  height: 20px;
+.cancel-button {
+  color: #d32f2f;
+}
+
+.cancel-button:hover {
+  color: #b71c1c;
+}
+
+.button-group {
+  margin-top: 20px;
+}
+
+/* --- NOVO: Estilo para o container de status quando conectado --- */
+.connected-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 25px; /* Espaçamento abaixo do indicador */
+  gap: 20px;
 }

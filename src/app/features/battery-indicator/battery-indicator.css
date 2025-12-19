@@ -1,0 +1,56 @@
+
+:host {
+  display: block;
+}
+
+.battery-container {
+  display: inline-flex; /* Usa inline-flex para o container se ajustar ao conteúdo */
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #e0e0e0;
+  box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+  transition: box-shadow 0.3s ease;
+  font-family: 'Roboto', sans-serif;
+  color: #555;
+}
+
+.battery-container:hover {
+  box-shadow: inset 2px 2px 5px #bebebe, inset -2px -2px 5px #ffffff;
+}
+
+.battery-icon {
+  font-size: 28px; /* Tamanho maior para o ícone */
+  transition: color 0.3s ease-in-out;
+}
+
+.battery-level {
+  font-size: 16px;
+  font-weight: 500;
+  min-width: 40px; /* Garante espaço para "100%" sem mudar o layout */
+  text-align: left;
+}
+
+/* Cores baseadas na classe computada */
+.high {
+  color: #388e3c; /* Verde escuro */
+}
+
+.medium {
+  color: #f57c00; /* Laranja */
+}
+
+.low {
+  color: #d32f2f; /* Vermelho */
+}
+
+/* Estilo especial para o alerta de bateria muito baixa */
+.battery-alert {
+  animation: blink-animation 1.5s infinite;
+}
+
+@keyframes blink-animation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
