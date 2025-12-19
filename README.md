@@ -25,7 +25,6 @@ O "Amigo Perto" é um aplicativo da web progressivo (PWA) construído com as ver
 *   **Estilização:** CSS nativo com Variáveis CSS para um design coeso e fácil de manter.
 *   **APIs do Navegador:** Web Bluetooth API, Web Audio API
 *   **Build:** Angular CLI
-*   **Hospedagem:** Firebase Hosting
 
 ---
 
