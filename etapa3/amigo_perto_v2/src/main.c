@@ -50,9 +50,15 @@ LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 // Nome do dispositivo BLE (definido em prj.conf via CONFIG_BT_DEVICE_NAME)
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 
+// === CONFIGURAÇÕES DE ECONOMIA DE ENERGIA ===
+
+// Duty-cycle dos LEDs: 50ms ON / 1950ms OFF = 2.5% (economiza ~97.5% de energia)
+#define LED_BLINK_ON_MS   50
+#define LED_BLINK_OFF_MS  1950
+
 // Intervalo de advertising BLE em milissegundos
-// Menor intervalo = mais fácil descobrir, mas consome mais energia
-#define ADV_INTERVAL_MS 500
+// 1000ms = bom balanço entre descoberta e economia de bateria
+#define ADV_INTERVAL_MS 1000
 
 // Threshold de bateria crítica (percentual)
 // Abaixo deste valor, um warning é exibido
@@ -81,6 +87,44 @@ static const struct gpio_dt_spec led_azul = GPIO_DT_SPEC_GET(LED_AZUL_NODE, gpio
 #error "LED azul não configurado no devicetree (alias 'ledazul' ausente)"
 #endif
 
+// === TIMERS PARA PISCAR LEDS COM BAIXO CONSUMO ===
+static struct k_timer led_azul_timer;
+static struct k_timer led_verde_timer;
+static bool led_azul_ativo = false;
+static bool led_verde_ativo = false;
+
+/**
+ * Handler do timer do LED azul (advertising)
+ * Alterna estado ON/OFF com duty-cycle de 2.5%
+ */
+static void led_azul_timer_handler(struct k_timer *timer)
+{
+	// Alterna estado
+	led_azul_ativo = !led_azul_ativo;
+	gpio_pin_set_dt(&led_azul, led_azul_ativo ? 1 : 0);
+	
+	// Próximo timeout: curto se aceso, longo se apagado
+	k_timer_start(&led_azul_timer, 
+	              K_MSEC(led_azul_ativo ? LED_BLINK_ON_MS : LED_BLINK_OFF_MS), 
+	              K_NO_WAIT);
+}
+
+/**
+ * Handler do timer do LED verde (conectado)
+ * Alterna estado ON/OFF com duty-cycle de 2.5%
+ */
+static void led_verde_timer_handler(struct k_timer *timer)
+{
+	// Alterna estado
+	led_verde_ativo = !led_verde_ativo;
+	gpio_pin_set_dt(&led_verde, led_verde_ativo ? 1 : 0);
+	
+	// Próximo timeout: curto se aceso, longo se apagado
+	k_timer_start(&led_verde_timer, 
+	              K_MSEC(led_verde_ativo ? LED_BLINK_ON_MS : LED_BLINK_OFF_MS), 
+	              K_NO_WAIT);
+}
+
 // === CALLBACKS BLE ===
 // Funções chamadas pelo HAL BLE para notificar eventos de conexão
 
@@ -99,9 +143,14 @@ static void on_ble_connected(const hal_ble_conn_info_t *conn_info)
 	LOG_INF("Latência: %u conexões", conn_info->latency);
 	LOG_INF("Timeout: %u ms", conn_info->timeout_ms);
 	
-	// Atualiza LEDs: azul OFF (para advertising), verde ON (conectado)
+	// Para timer do LED azul e apaga
+	k_timer_stop(&led_azul_timer);
 	gpio_pin_set_dt(&led_azul, 0);
-	gpio_pin_set_dt(&led_verde, 1);
+	led_azul_ativo = false;
+	
+	// Inicia timer do LED verde (piscar lento)
+	led_verde_ativo = false;
+	k_timer_start(&led_verde_timer, K_MSEC(LED_BLINK_OFF_MS), K_NO_WAIT);
 }
 
 /**
@@ -120,8 +169,14 @@ static void on_ble_disconnected(uint8_t reason)
 	// Segurança: desliga buzzer ao desconectar
 	hal_buzzer_set_intermittent(false, 0);
 	
-	// Atualiza LED: verde OFF (não conectado)
+	// Para timer do LED verde e apaga
+	k_timer_stop(&led_verde_timer);
 	gpio_pin_set_dt(&led_verde, 0);
+	led_verde_ativo = false;
+	
+	// Reinicia timer do LED azul (piscar lento)
+	led_azul_ativo = false;
+	k_timer_start(&led_azul_timer, K_MSEC(LED_BLINK_OFF_MS), K_NO_WAIT);
 }
 
 /**
@@ -132,10 +187,11 @@ static void on_ble_disconnected(uint8_t reason)
  */
 static void on_ble_adv_started(void)
 {
-	LOG_INF("BLE Advertising iniciado");
+	LOG_INF("BLE Advertising iniciado (modo baixo consumo)");
 	
-	// Atualiza LED: azul ON (advertising ativo)
-	gpio_pin_set_dt(&led_azul, 1);
+	// Inicia timer do LED azul (piscar lento)
+	led_azul_ativo = false;
+	k_timer_start(&led_azul_timer, K_MSEC(LED_BLINK_OFF_MS), K_NO_WAIT);
 }
 
 /**
@@ -146,6 +202,11 @@ static void on_ble_adv_started(void)
 static void on_ble_adv_stopped(void)
 {
 	LOG_DBG("BLE Advertising parado");
+	
+	// Para timer do LED azul e apaga
+	k_timer_stop(&led_azul_timer);
+	gpio_pin_set_dt(&led_azul, 0);
+	led_azul_ativo = false;
 }
 
 // Registra callbacks BLE no HAL
@@ -239,12 +300,13 @@ int main(void)
 
 	LOG_INF("=============================================");
 	LOG_INF("   Amigo Perto - Alerta de Proximidade");
+	LOG_INF("   Modo: Ultra Baixo Consumo");
 	LOG_INF("=============================================");
 	LOG_INF("");
 
 	// === ETAPA 1: Inicialização dos LEDs ===
 	
-	LOG_INF("[1/6] Inicializando LEDs...");
+	LOG_INF("[1/6] Inicializando LEDs (modo economia)...");
 	
 	// Verifica se GPIOs estão prontos
 	if (!gpio_is_ready_dt(&led_verde)) 
@@ -274,7 +336,11 @@ int main(void)
 		return -1;
 	}
 
-	LOG_INF("LEDs configurados com sucesso");
+	// Inicializa timers dos LEDs
+	k_timer_init(&led_azul_timer, led_azul_timer_handler, NULL);
+	k_timer_init(&led_verde_timer, led_verde_timer_handler, NULL);
+
+	LOG_INF("LEDs configurados (duty-cycle: 2.5%%)");
 	LOG_INF("");
 
 	// === ETAPA 2: Inicialização do Buzzer ===
@@ -334,9 +400,9 @@ int main(void)
 	
 	LOG_INF("[5/6] Iniciando BLE Advertising...");
 	
-	// Configura parâmetros de advertising
+	// Configura parâmetros de advertising otimizados
 	hal_ble_adv_params_t adv_params = {
-		.interval_min_ms = ADV_INTERVAL_MS,   // Intervalo entre anúncios
+		.interval_min_ms = ADV_INTERVAL_MS,   // 1000ms (economiza bateria)
 		.interval_max_ms = ADV_INTERVAL_MS,   // Intervalo fixo
 		.connectable = true,                  // Aceita conexões
 		.use_identity = true,                 // Usa MAC fixo (rastreável)
@@ -349,7 +415,7 @@ int main(void)
 		return -1;
 	}
 	
-	LOG_INF("Advertising iniciado - Intervalo: %d ms", ADV_INTERVAL_MS);
+	LOG_INF("Advertising iniciado - Intervalo: %d ms (economia de energia)", ADV_INTERVAL_MS);
 	LOG_INF("");
 
 	// === ETAPA 6: Inicialização da Bateria (best-effort) ===
@@ -399,8 +465,13 @@ int main(void)
 	// === SISTEMA PRONTO ===
 	
 	LOG_INF("=============================================");
-	LOG_INF("   SISTEMA INICIALIZADO COM SUCESSO");
+	LOG_INF("   SISTEMA INICIALIZADO - MODO ECO");
 	LOG_INF("=============================================");
+	LOG_INF("");
+	LOG_INF("Configurações de Economia:");
+	LOG_INF("  - Advertising: 1000ms (baixo consumo)");
+	LOG_INF("  - LEDs: duty-cycle 2.5%% (97.5%% economia)");
+	LOG_INF("  - Deep sleep: habilitado quando ocioso");
 	LOG_INF("");
 	LOG_INF("Status:");
 	LOG_INF("  - BLE Advertising: ATIVO");
@@ -413,7 +484,7 @@ int main(void)
 	LOG_INF("      Battery Level (0x2A19): read 0-100%%");
 	LOG_INF("      Battery Voltage (customizado): read milivolts");
 	LOG_INF("");
-	LOG_INF("LEDs:");
+	LOG_INF("LEDs (piscantes):");
 	LOG_INF("  - Azul: Advertising ativo");
 	LOG_INF("  - Verde: Conectado");
 	LOG_INF("=============================================");
