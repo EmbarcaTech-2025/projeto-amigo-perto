@@ -35,6 +35,14 @@
 	zephyr,user {
 		io-channels = <&adc 7>;
 	};
+
+	xiao_ble_battery_dev: xiao_ble_battery_dev {
+		compatible = "xiao-ble-battery";
+		charging-enable-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+		read-enable-gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+		charge-speed-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+		adc-channel = <NRF_SAADC_AIN7>;
+	};
 };
 
 &pwm0 {
@@ -63,15 +71,4 @@
 /* Habilita ADC para leitura de bateria */
 &adc {
 	status = "okay";
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	channel@7 {
-		reg = <7>;
-		zephyr,gain = "ADC_GAIN_1_6";
-		zephyr,reference = "ADC_REF_INTERNAL";
-		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 10)>;
-		zephyr,input-positive = <NRF_SAADC_AIN7>;  /* P0.31 - PIN_VBAT do XIAO nRF52840 */
-		zephyr,resolution = <12>;
-	};
 };

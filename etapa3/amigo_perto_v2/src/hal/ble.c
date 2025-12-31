@@ -73,7 +73,7 @@ static struct k_work adv_work;
 // AD: dados enviados no pacote principal de advertising
 // SD: dados adicionais enviados quando um scanner solicita mais informações
 static struct bt_data ad_data[2];  // [0]=Flags, [1]=Nome
-static struct bt_data sd_data[1];  // [0]=UUID do serviço
+static struct bt_data sd_data[2];  // [0]=UUID16 (Battery), [1]=UUID128 (Buzzer)
 static size_t ad_data_count = 0;
 static size_t sd_data_count = 0;
 
@@ -274,37 +274,49 @@ static void prepare_adv_data(void)
 	size_t name_len = strlen(device_name);
 	
 	// --- ADVERTISING DATA ---
-	ad_data_count = 0;
+	ad_data_count = 0; //Zerar o “contador de itens” do advertising
 	
 	// Flags: General Discoverable + BR/EDR Not Supported
 	// General Discoverable: dispositivo sempre detectável
 	// BR/EDR Not Supported: apenas BLE, sem Bluetooth Classic
-	ad_data[ad_data_count].type = BT_DATA_FLAGS;
-	ad_data[ad_data_count].data_len = 1;
-	static const uint8_t flags = BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR;
-	ad_data[ad_data_count].data = &flags;
-	ad_data_count++;
+
+	ad_data[ad_data_count].type = BT_DATA_FLAGS; //Definir o tipo do campo atual como FLAGS
+	ad_data[ad_data_count].data_len = 1; //Definir que esse campo tem 1 byte de dados
+	static const uint8_t flags = BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR; //Criar o byte de flags (duas flags): BT_LE_AD_GENERAL e BT_LE_AD_NO_BREDR
+	ad_data[ad_data_count].data = &flags; //Apontar o campo de dados para o byte de flags
+	ad_data_count++; //Avançar para o próximo campo do advertising
+	//BT_LE_AD_GENERAL: “modo descobrível geral” → o dispositivo está anunciando que pode ser encontrado normalmente (não é “limitado por tempo”)
+	//BT_LE_AD_NO_BREDR: “não suporta BR/EDR” → ou seja, não tem Bluetooth clássico, é somente BLE
 	
 	// Nome completo do dispositivo
 	if (name_len > 0) 
 	{
-		ad_data[ad_data_count].type = BT_DATA_NAME_COMPLETE;
-		ad_data[ad_data_count].data_len = name_len;
-		ad_data[ad_data_count].data = (const uint8_t *)device_name;
-		ad_data_count++;
+		ad_data[ad_data_count].type = BT_DATA_NAME_COMPLETE; //Define o tipo do campo como o nome completo do dispositivo
+		ad_data[ad_data_count].data_len = name_len; //Define o tamanho do campo como o tamanho do nome
+		ad_data[ad_data_count].data = (const uint8_t *)device_name; //Aponta o campo de dados para o nome do dispositivo
+		ad_data_count++; //Avança para o próximo campo do advertising
 	}
 	
 	// --- SCAN RESPONSE DATA ---
-	sd_data_count = 0;
+	sd_data_count = 0; //Zerar o “contador de itens” do scan response
+
+	// UUID do serviço padrão Battery Service (0x180F)
+	// Lista de UUID16 é little-endian: 0x180F -> { 0x0F, 0x18 }
+	static const uint8_t bas_uuid16[] = { 0x0F, 0x18 }; //Colocar um serviço padrão (Battery Service 0x180F) na scan response
+
+	sd_data[sd_data_count].type = BT_DATA_UUID16_ALL; //Diz que “o campo é uma lista de UUID16"
+	sd_data[sd_data_count].data_len = sizeof(bas_uuid16); //Define o tamanho do campo como 2 bytes (tamanho do UUID16)
+	sd_data[sd_data_count].data = bas_uuid16; //Aponta o campo de dados para o array do UUID16
+	sd_data_count++; //Avança para o próximo campo do scan response
 	
 	// UUID do serviço customizado Buzzer Service
 	// Declarado como static para garantir que o ponteiro permanece válido
-	static const struct bt_uuid_128 buzzer_uuid = BT_UUID_INIT_128(BT_UUID_BUZZER_SERVICE_VAL);
+	static const struct bt_uuid_128 buzzer_uuid = BT_UUID_INIT_128(BT_UUID_BUZZER_SERVICE_VAL); //Coloca um serviço customizado (UUID 128-bit do Buzzer Service)
 	
-	sd_data[sd_data_count].type = BT_DATA_UUID128_ALL;
+	sd_data[sd_data_count].type = BT_DATA_UUID128_ALL; //Diz que “o campo é uma lista de UUID128”
 	sd_data[sd_data_count].data_len = 16;  // UUID 128 bits = 16 bytes
-	sd_data[sd_data_count].data = buzzer_uuid.val;
-	sd_data_count++;
+	sd_data[sd_data_count].data = buzzer_uuid.val; //Apontar para os 16 bytes do UUID
+	sd_data_count++; //Avança para o próximo campo do scan response
 }
 
 // === API PÚBLICA ===
@@ -402,6 +414,12 @@ int hal_ble_init(const char *device_name_param, const hal_ble_callbacks_t *callb
  * 
  * Se adv_params = NULL, usa valores padrão (500ms, conectável, MAC fixo)
  * 
+ * 1. Se não inicializou → erro.
+ * 2. Se já conectado → erro.
+ * 3. Se passou parâmetros → valida, traduz e salva.
+ * 4. Agenda início do advertising.
+ * 5. Retorna sucesso.
+ * 
  * IMPORTANTE: O advertising para automaticamente quando uma conexão é
  * estabelecida. Use o callback adv_stopped para detectar isso.
  */
@@ -414,7 +432,7 @@ int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 		return HAL_BLE_ERROR_STATE;
 	}
 	
-	// Não pode fazer advertising se já está conectado
+	// Não pode fazer advertising se já está conectado - current_conn guarda a conexão atual.
 	if (current_conn != NULL) 
 	{
 		LOG_WRN("Já conectado, não pode iniciar advertising");
@@ -422,39 +440,41 @@ int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 	}
 	
 	// Configura parâmetros customizados se fornecidos
-	if (adv_params) 
+	if (adv_params) //Se adv_params != NULL, o usuário quer customizar
 	{
 		// Validação: intervalos devem estar dentro dos limites da spec
-		if (adv_params->interval_min_ms < ADV_INTERVAL_MIN_MS ||
-		    adv_params->interval_min_ms > ADV_INTERVAL_MAX_MS ||
-		    adv_params->interval_max_ms < ADV_INTERVAL_MIN_MS ||
-		    adv_params->interval_max_ms > ADV_INTERVAL_MAX_MS ||
-		    adv_params->interval_min_ms > adv_params->interval_max_ms) {
+		if (adv_params->interval_min_ms < ADV_INTERVAL_MIN_MS || //interval_min_ms não pode ser menor que o mínimo permitido (20ms).
+		    adv_params->interval_min_ms > ADV_INTERVAL_MAX_MS || //interval_min_ms não pode ser maior que o máximo permitido (10240ms).
+		    adv_params->interval_max_ms < ADV_INTERVAL_MIN_MS || //interval_max_ms não pode ser menor que o mínimo permitido (20ms).
+		    adv_params->interval_max_ms > ADV_INTERVAL_MAX_MS || //interval_max_ms não pode ser maior que o máximo permitido (10240ms).
+		    adv_params->interval_min_ms > adv_params->interval_max_ms) 
+		{
 			LOG_ERR("Parâmetros de advertising inválidos");
 			return HAL_BLE_ERROR_INVALID;
 		}
 		
 		// Monta opções de advertising
-		uint32_t options = 0;
-		if (adv_params->connectable) 
+		uint32_t options = 0; //options é um conjunto de “flags” (bits) que dizem como o advertising deve ser
+
+		if (adv_params->connectable) //connectable == true
 		{
 			options |= BT_LE_ADV_OPT_CONN;  // Aceita conexões
 		}
-		if (adv_params->use_identity) 
+		if (adv_params->use_identity) //use_identity == true
 		{
-			options |= BT_LE_ADV_OPT_USE_IDENTITY;  // Usa endereço MAC fixo
+			options |= BT_LE_ADV_OPT_USE_IDENTITY;  // Usa endereço MAC fixo 
 		}
 		
-		// Preenche estrutura de parâmetros do Zephyr
-		adv_param_storage.id = 0;
-		adv_param_storage.sid = 0;
-		adv_param_storage.secondary_max_skip = 0;
-		adv_param_storage.options = options;
-		adv_param_storage.interval_min = MS_TO_BLE_UNITS(adv_params->interval_min_ms);
-		adv_param_storage.interval_max = MS_TO_BLE_UNITS(adv_params->interval_max_ms);
-		adv_param_storage.peer = NULL;
+		// Preenche estrutura de parâmetros do Zephyr - Aqui acontece uma “tradução” como que o que o Zephyr usa 
+		adv_param_storage.id = 0; //usa a identidade 0
+		adv_param_storage.sid = 0; //set de advertising (para extended advertising), aqui fixo em 0
+		adv_param_storage.secondary_max_skip = 0; //não pula eventos de advertising secundário
+		adv_param_storage.options = options; //aplica as flags montadas
+		adv_param_storage.interval_min = MS_TO_BLE_UNITS(adv_params->interval_min_ms); //converte ms → unidades BLE usando MS_TO_BLE_UNITS(ms) (ms * 8 / 5).
+		adv_param_storage.interval_max = MS_TO_BLE_UNITS(adv_params->interval_max_ms); //converte ms → unidades BLE usando MS_TO_BLE_UNITS(ms) (ms * 8 / 5).
+		adv_param_storage.peer = NULL; //peer = NULL: não é advertising direcionado a um peer específico
 		
-		adv_param = &adv_param_storage;
+		adv_param = &adv_param_storage; //uarda um ponteiro para esses parâmetros, para serem usados mais tarde ao iniciar de fato o advertising.
 		
 		LOG_DBG("Parâmetros de advertising configurados: %u-%u ms",
 		        adv_params->interval_min_ms, adv_params->interval_max_ms);
@@ -462,12 +482,12 @@ int hal_ble_start_advertising(const hal_ble_adv_params_t *adv_params)
 	else 
 	{
 		// Usa parâmetros padrão (serão aplicados em adv_work_handler)
-		adv_param = NULL;
+		adv_param = NULL; //(500ms, conectável, MAC fixo)
 	}
 	
 	// Submete work item para iniciar advertising de forma assíncrona
 	// Isso permite chamar esta função de qualquer contexto (thread, callback, ISR)
-	k_work_submit(&adv_work);
+	k_work_submit(&adv_work); //Em vez de iniciar advertising imediatamente, ele agenda um trabalho (adv_work) para rodar depois
 	
 	return HAL_BLE_SUCCESS;
 }
