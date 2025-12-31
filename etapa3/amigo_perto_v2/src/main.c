@@ -36,11 +36,11 @@
 // === HARDWARE ABSTRACTION LAYER ===
 #include "hal/ble.h"        // HAL BLE: advertising, conexões
 #include "hal/buzzer.h"     // HAL Buzzer: controle PWM do alarme
-#include "hal/battery.h"    // HAL Battery: leitura de percentual
+#include "hal/battery.h"    // Battery lib: init, amostragem, callbacks
 
 // === SERVIÇOS GATT ===
 #include "gatt/buzzer_service.h"   // Serviço GATT customizado do buzzer
-#include "gatt/battery_service.h"  // Serviço GATT padrão de bateria (0x180F)
+#include "gatt/battery_service.h"  // Battery Service padrão (0x180F)
 
 // Registra módulo de logging
 LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
@@ -63,6 +63,9 @@ LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 // Threshold de bateria crítica (percentual)
 // Abaixo deste valor, um warning é exibido
 #define BATTERY_CRITICAL_THRESHOLD 10
+
+// Intervalo de amostragem da bateria (ms)
+#define BATTERY_SAMPLING_INTERVAL_MS 1000
 
 // === CONFIGURAÇÃO DOS LEDS ===
 
@@ -248,26 +251,31 @@ static const struct gatt_buzzer_service_cb buzzer_callbacks = {
 };
 
 // === CALLBACKS GATT BATTERY SERVICE ===
-// Funções chamadas quando características GATT são lidas remotamente
+// O serviço GATT de bateria lê os valores on-demand via battery_get_millivolt().
+// Aqui registramos callbacks da *biblioteca* de bateria só para logging/debug.
 
-/**
- * Callback: Característica Battery Level lida via BLE
- *
- * Chamado quando o dispositivo central (smartphone) lê a característica
- * Battery Level (0x2A19) do serviço GATT padrão Battery (0x180F).
- *
- * @param percentage Percentual de bateria lido (0-100%)
- * @param voltage_mv Tensão da bateria em milivolts
- */
-static void on_battery_read(uint8_t percentage, uint16_t voltage_mv)
+static void log_battery_voltage(uint16_t millivolt)
 {
-	LOG_INF("Bateria lida via BLE: %d%% (%dmV)", percentage, voltage_mv);
+	uint8_t battery_percentage = 0;
+
+	int ret = battery_get_percentage(&battery_percentage, millivolt);
+	if (ret)
+	{
+		LOG_ERR("Falha ao calcular percentual de bateria (%d)", ret);
+		return;
+	}
+
+	LOG_INF("Battery: %u mV (%u%%)", millivolt, battery_percentage);
+	if (battery_percentage < BATTERY_CRITICAL_THRESHOLD)
+	{
+		LOG_WRN("ATENÇÃO: Bateria crítica! (%u%%) - Recarregue em breve", battery_percentage);
+	}
 }
 
-// Registra callbacks Battery Service
-static const struct gatt_battery_service_cb battery_callbacks = {
-	.battery_read_cb = on_battery_read,
-};
+static void log_charging_state(bool is_charging)
+{
+	LOG_INF("Charger %s", is_charging ? "connected" : "disconnected");
+}
 
 // === FUNÇÃO PRINCIPAL ===
 
@@ -288,6 +296,7 @@ static const struct gatt_battery_service_cb battery_callbacks = {
 int main(void)
 {
 	int err;
+	bool battery_ok = false;
 
 	LOG_INF("=============================================");
 	LOG_INF("   Amigo Perto - Alerta de Proximidade");
@@ -348,31 +357,9 @@ int main(void)
 	LOG_INF("HAL Buzzer inicializado");
 	LOG_INF("");
 	
-	// === ETAPA 3: Inicialização da Bateria ===
+	// === ETAPA 3: Inicialização do BLE ===
 	
-	LOG_INF("[3/6] Inicializando HAL Battery...");
-	
-	err = hal_battery_init();
-	if (err != HAL_BATTERY_SUCCESS) 
-	{
-		LOG_ERR("Erro ao inicializar HAL Battery: %d", err);
-		return -1;
-	}
-
-	// Lê nível inicial da bateria
-	uint8_t battery_level = hal_battery_get_percentage();
-	LOG_INF("HAL Battery inicializado - Nível: %d%%", battery_level);
-	
-	// Alerta se bateria estiver crítica
-	if (battery_level < BATTERY_CRITICAL_THRESHOLD) 
-	{
-		LOG_WRN("ATENÇÃO: Bateria crítica! (%d%%) - Recarregue em breve", battery_level);
-	}
-	LOG_INF("");
-	
-	// === ETAPA 4: Inicialização do BLE ===
-	
-	LOG_INF("[4/6] Inicializando HAL BLE...");
+	LOG_INF("[3/6] Inicializando HAL BLE...");
 	
 	err = hal_ble_init(DEVICE_NAME, &ble_callbacks);
 	if (err != HAL_BLE_SUCCESS) 
@@ -384,9 +371,9 @@ int main(void)
 	LOG_INF("HAL BLE inicializado - Device: %s", DEVICE_NAME);
 	LOG_INF("");
 	
-	// === ETAPA 5: Inicialização dos Serviços GATT ===
+	// === ETAPA 4: Inicialização dos Serviços GATT ===
 	
-	LOG_INF("[5/6] Inicializando serviços GATT...");
+	LOG_INF("[4/6] Inicializando serviços GATT...");
 	
 	// Serviço customizado: Buzzer Service
 	err = gatt_buzzer_service_init(&buzzer_callbacks);
@@ -398,20 +385,20 @@ int main(void)
 	LOG_INF("  - Buzzer Service (customizado)");
 	
 	// Serviço padrão: Battery Service (UUID 0x180F)
-	err = gatt_battery_service_init(&battery_callbacks);
-	if (err != 0) 
+	err = battery_service_init();
+	if (err != 0)
 	{
-		LOG_ERR("Erro ao inicializar GATT Battery Service: %d", err);
-		return -1;
+		// Best-effort: BLE deve continuar mesmo que a bateria/ADC não esteja pronto
+		LOG_WRN("Battery Service init retornou erro (%d). BLE seguirá ativo", err);
 	}
 	LOG_INF("  - Battery Service (0x180F)");
 	
 	LOG_INF("Serviços GATT inicializados");
 	LOG_INF("");
 	
-	// === ETAPA 6: Inicia Advertising BLE ===
+	// === ETAPA 5: Inicia Advertising BLE ===
 	
-	LOG_INF("[6/6] Iniciando BLE Advertising (baixo consumo)...");
+	LOG_INF("[5/6] Iniciando BLE Advertising...");
 	
 	// Configura parâmetros de advertising otimizados
 	hal_ble_adv_params_t adv_params = {
@@ -430,6 +417,50 @@ int main(void)
 	
 	LOG_INF("Advertising iniciado - Intervalo: %d ms (economia de energia)", ADV_INTERVAL_MS);
 	LOG_INF("");
+
+	// === ETAPA 6: Inicialização da Bateria (best-effort) ===
+	// Igual ao exemplo: mantém BLE/advertising ativo mesmo se a bateria falhar.
+
+	LOG_INF("[6/6] Inicializando Battery library...");
+	err = battery_init();
+	if (err)
+	{
+		LOG_WRN("Battery init falhou (%d). BLE seguirá ativo com valores=0", err);
+		battery_ok = false;
+	}
+	else
+	{
+		battery_ok = true;
+	}
+
+	if (battery_ok)
+	{
+		int ret = battery_register_charging_callback(log_charging_state);
+		if (ret)
+		{
+			LOG_WRN("Falha ao registrar charging callback (%d)", ret);
+		}
+
+		ret = battery_register_sample_callback(log_battery_voltage);
+		if (ret)
+		{
+			LOG_WRN("Falha ao registrar sample callback (%d)", ret);
+		}
+
+		// Amostra inicial (1x) + amostragem periódica
+		ret = battery_sample_once();
+		if (ret)
+		{
+			LOG_WRN("Falha ao amostrar bateria uma vez (%d)", ret);
+		}
+		k_sleep(K_SECONDS(3));
+
+		ret = battery_start_sampling(BATTERY_SAMPLING_INTERVAL_MS);
+		if (ret)
+		{
+			LOG_WRN("Falha ao iniciar amostragem periódica (%d)", ret);
+		}
+	}
 	
 	// === SISTEMA PRONTO ===
 	
@@ -459,15 +490,11 @@ int main(void)
 	LOG_INF("=============================================");
 	
 	// Loop infinito - sistema controlado por eventos via callbacks
-	while (1) 
+	while (1)
 	{
-		// Suspende thread principal indefinidamente
-		// Zephyr entra em deep sleep automaticamente quando:
-		// - Nenhum timer ativo nos próximos X ms
-		// - Nenhuma interrupção pendente
-		// - Nenhum work item pendente
-		// Os timers dos LEDs acordam o sistema apenas 2.5%% do tempo
-		k_sleep(K_FOREVER);
+		k_sleep(K_SECONDS(60));
+		// Se precisar parar a amostragem em algum momento:
+		// (void)battery_stop_sampling();
 	}
 	
 	return 0;

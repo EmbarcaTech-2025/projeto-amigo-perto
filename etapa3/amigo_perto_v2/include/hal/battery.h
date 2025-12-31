@@ -1,91 +1,112 @@
 /*
- * HAL Battery - Hardware Abstraction Layer para monitoramento de bateria
- * Copyright (c) 2025
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ * Copyright 2024 Marcus Alexander Tjomsaas
  *
- * Interface simplificada para leitura do percentual de carga da bateria LiPo.
- * Usa o canal interno SAADC_VDD do nRF52840 para medir a tensão de alimentação.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#ifndef HAL_BATTERY_H_
-#define HAL_BATTERY_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef __BATTERY_H__
+#define __BATTERY_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 
-// Códigos de retorno das funções HAL Battery
-typedef enum {
-	HAL_BATTERY_SUCCESS = 0,     // Operação bem-sucedida
-	HAL_BATTERY_ERROR_INIT = -1, // Erro na inicialização do ADC
-	HAL_BATTERY_ERROR_READ = -2, // Erro ao ler ADC
-} hal_battery_error_t;
-
-// === API PÚBLICA ===
+// Callback function type definitions
+typedef void (*battery_charging_callback_t)(bool is_charging);
+typedef void (*battery_sample_callback_t)(uint16_t millivolt);
 
 /**
- * Inicializa o módulo de monitoramento de bateria
- * 
- * Configura o ADC do nRF52840 para ler o canal interno VDD (tensão de alimentação).
- * Esta função deve ser chamada antes de usar hal_battery_get_percentage().
- * 
- * Retorna:
- *   HAL_BATTERY_SUCCESS: Inicialização bem-sucedida
- *   HAL_BATTERY_ERROR_INIT: Falha ao configurar ADC
- * 
- * Exemplo:
- *   if (hal_battery_init() == HAL_BATTERY_SUCCESS) {
- *       uint8_t level = hal_battery_get_percentage();
- *   }
+ * @brief Register a callback function that is executed every time the charging state changes.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ *
+ * @note If the error is -12, try increasing the BATTERY_CALLBACK_MAX define in the library.
  */
-int hal_battery_init(void);
+int battery_register_charging_callback(battery_charging_callback_t callback);
 
 /**
- * Lê o percentual de carga da bateria LiPo
- * 
- * Realiza leitura do ADC com oversampling (múltiplas leituras para maior precisão),
- * converte a tensão medida em percentual de carga baseado na curva de descarga
- * da bateria LiPo 1S usando interpolação linear em 11 pontos.
- * 
- * Retorna:
- *   0-100: Percentual de carga da bateria
- *   0: Se não inicializado ou erro na leitura
- * 
- * Curva de conversão (11 pontos):
- *   - 4.20V = 100% | 4.11V = 90% | 4.02V = 80% | 3.93V = 70%
- *   - 3.84V = 60%  | 3.75V = 50% | 3.66V = 40% | 3.57V = 30%
- *   - 3.48V = 20%  | 3.39V = 10% | 3.30V = 0%
- * 
- * Nota: A leitura leva ~20ms devido ao oversampling e estabilização do circuito.
+ * @brief Register a callback function that is executed every time a voltage sample is ready.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ *
+ * @note If the error is -12, try increasing the BATTERY_CALLBACK_MAX define in the library.
  */
-uint8_t hal_battery_get_percentage(void);
+int battery_register_sample_callback(battery_sample_callback_t callback);
 
 /**
- * Lê a tensão da bateria em milivolts
- * 
- * Realiza leitura do ADC com oversampling e retorna a tensão bruta em mV.
- * Útil para depuração ou quando é necessário o valor exato de tensão.
- * 
- * Parâmetros:
- *   battery_millivolt: Ponteiro para armazenar a tensão em mV
- * 
- * Retorna:
- *   0: Sucesso
- *   Negativo: Código de erro (ver hal_battery_error_t)
- * 
- * Exemplo:
- *   uint16_t voltage_mv;
- *   if (hal_battery_get_millivolt(&voltage_mv) == 0) {
- *       printk("Bateria: %d mV\n", voltage_mv);
- *   }
+ * @brief Set battery charging to fast charge (100mA).
+ *
+ * @retval 0 if successful. Negative errno number on error.
  */
-int hal_battery_get_millivolt(uint16_t *battery_millivolt);
+int battery_set_fast_charge(void);
 
-#ifdef __cplusplus
-}
+/**
+ * @brief Set battery charging to slow charge (50mA).
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ */
+int battery_set_slow_charge(void);
+
+/**
+ * @brief Get the current battery voltage in millivolts.
+ *
+ * @param[out] battery_millivolt Pointer where the battery voltage will be stored.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ */
+int battery_get_millivolt(uint16_t *battery_millivolt);
+
+/**
+ * @brief Calculate the battery percentage based on the voltage.
+ *
+ * @param[out] battery_percentage Pointer where the battery percentage will be stored.
+ * @param[in] battery_millivolt Voltage reading to calculate the percentage from.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ */
+int battery_get_percentage(uint8_t *battery_percentage, uint16_t battery_millivolt);
+
+/**
+ * @brief Start periodic sampling of the battery voltage.
+ *
+ * @param[in] interval_ms Sampling interval in milliseconds.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ *
+ * @note Registered sample callbacks are called when a new sample is ready.
+ */
+int battery_start_sampling(uint32_t interval_ms);
+
+/**
+ * @brief Stop periodic sampling of the battery voltage.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ */
+int battery_stop_sampling(void);
+
+/**
+ * @brief Take a one-time battery voltage sample.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ *
+ * @note Registered sample callbacks are called when the sample is ready.
+ */
+int battery_sample_once(void);
+
+/**
+ * @brief Initialize the battery management system.
+ *
+ * @retval 0 if successful. Negative errno number on error.
+ */
+int battery_init(void);
+
 #endif
-
-#endif /* HAL_BATTERY_H_ */
