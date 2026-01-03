@@ -78,8 +78,8 @@ static size_t ad_data_count = 0;
 static size_t sd_data_count = 0;
 
 // Armazenamento para parâmetros customizados de advertising
-static struct bt_le_adv_param adv_param_storage;
-static const struct bt_le_adv_param *adv_param = NULL;
+static struct bt_le_adv_param adv_param_storage; //onde os parâmetros customizados ficam armazenados
+static const struct bt_le_adv_param *adv_param = NULL; //qual configuração será usada (um ponteiro que pode apontar para o storage ou ser NULL para usar padrão)
 
 // === CALLBACKS DO STACK BLUETOOTH (chamados pelo Zephyr) ===
 
