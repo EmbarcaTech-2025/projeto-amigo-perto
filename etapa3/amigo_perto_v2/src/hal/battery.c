@@ -22,6 +22,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/logging/log.h>
+#include <errno.h>
 
 LOG_MODULE_REGISTER(battery, LOG_LEVEL_INF);
 
@@ -126,6 +127,38 @@ static BatteryState battery_states[BATTERY_STATES_COUNT] = {
 };
 
 //------------------------------------------------------------------------------------------
+// ADC reading stabilization
+//
+// On some boards, AIN7 can show noticeable jitter even when VBAT is stable.
+// We stabilize the returned VBAT using:
+// - trimmed mean across samples (drop min/max)
+// - simple IIR low-pass filter
+// - spike rejection
+
+#define VBAT_SPIKE_REJECT_DELTA_MV 150
+#define VBAT_IIR_ALPHA_SHIFT 3 /* 1/8 */
+
+static uint16_t vbat_filtered_mv;
+static bool vbat_filtered_valid;
+
+static bool gpio_dt_is_active(const struct gpio_dt_spec *spec)
+{
+    int level = gpio_pin_get_dt(spec);
+    if (level < 0)
+    {
+        return false;
+    }
+
+    bool active = (level != 0);
+    if ((spec->dt_flags & GPIO_ACTIVE_LOW) != 0U)
+    {
+        active = !active;
+    }
+
+    return active;
+}
+
+//------------------------------------------------------------------------------------------
 // Private functions
 
 static int battery_enable_read()
@@ -135,7 +168,7 @@ static int battery_enable_read()
 
 static void run_charging_callbacks(struct k_work *work)
 {
-    bool is_charging = gpio_pin_get_dt(&charging_enable);
+    bool is_charging = gpio_dt_is_active(&charging_enable);
     LOG_DBG("Charger %s", is_charging ? "connected" : "disconnected");
 
     for (uint8_t callback = 0; callback < charging_callbacks_registered; callback++)
@@ -265,13 +298,35 @@ int battery_get_millivolt(uint16_t *battery_millivolt)
         LOG_WRN("ADC read failed (error %d)", ret);
     }
 
-    uint32_t adc_sum = 0;
-    // Get average sample value.
+    // Stabilize raw ADC averaging: use trimmed mean (drop min/max) when possible.
+    int32_t adc_sum = 0;
+    int16_t adc_min = INT16_MAX;
+    int16_t adc_max = INT16_MIN;
     for (uint8_t sample = 0; sample < ADC_TOTAL_SAMPLES; sample++)
     {
-        adc_sum += sample_buffer[sample]; // ADC value, not millivolt yet.
+        int16_t v = sample_buffer[sample];
+        adc_sum += v;
+        if (v < adc_min)
+        {
+            adc_min = v;
+        }
+        if (v > adc_max)
+        {
+            adc_max = v;
+        }
     }
-    uint32_t adc_average = adc_sum / ADC_TOTAL_SAMPLES;
+
+    uint32_t adc_average;
+    if (ADC_TOTAL_SAMPLES >= 3)
+    {
+        adc_sum -= adc_min;
+        adc_sum -= adc_max;
+        adc_average = (uint32_t)(adc_sum / (ADC_TOTAL_SAMPLES - 2));
+    }
+    else
+    {
+        adc_average = (uint32_t)(adc_sum / ADC_TOTAL_SAMPLES);
+    }
 
     // Convert ADC value to millivolts
     uint32_t adc_mv = adc_average;
@@ -279,8 +334,37 @@ int battery_get_millivolt(uint16_t *battery_millivolt)
 
     // Calculate battery voltage.
     float scale_factor = ((float)(R1 + R2)) / R2;
-    *battery_millivolt = (uint16_t)(adc_mv * scale_factor);
+    uint16_t vbat_mv = (uint16_t)(adc_mv * scale_factor);
 
+    // Final stabilization: reject large spikes and apply a light low-pass filter.
+    if (!vbat_filtered_valid)
+    {
+        vbat_filtered_mv = vbat_mv;
+        vbat_filtered_valid = true;
+    }
+    else
+    {
+        int32_t diff = (int32_t)vbat_mv - (int32_t)vbat_filtered_mv;
+        if (diff < 0)
+        {
+            diff = -diff;
+        }
+
+        if (diff > VBAT_SPIKE_REJECT_DELTA_MV)
+        {
+            // Keep previous stable value.
+            vbat_mv = vbat_filtered_mv;
+        }
+        else
+        {
+            // IIR: filtered += (new-filtered)/8
+            int32_t delta = (int32_t)vbat_mv - (int32_t)vbat_filtered_mv;
+            vbat_filtered_mv = (uint16_t)((int32_t)vbat_filtered_mv + (delta >> VBAT_IIR_ALPHA_SHIFT));
+            vbat_mv = vbat_filtered_mv;
+        }
+    }
+
+    *battery_millivolt = vbat_mv;
     k_mutex_unlock(&battery_mut);
 
     LOG_DBG("%d mV", *battery_millivolt);
@@ -437,11 +521,13 @@ int battery_init()
     gpio_add_callback_dt(&charging_enable, &charging_callback);
 
     // Lets check the current charging status
-    bool is_charging = gpio_pin_get_dt(&charging_enable);
+    bool is_charging = gpio_dt_is_active(&charging_enable);
     LOG_INF("Charger %s", is_charging ? "connected" : "disconnected");
 
     is_initialized = true;
     LOG_INF("Initialized");
+
+    vbat_filtered_valid = false;
 
     // Get ready for battery charging and sampling
     ret |= battery_set_fast_charge();
