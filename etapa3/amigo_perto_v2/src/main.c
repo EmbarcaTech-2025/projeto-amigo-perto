@@ -65,7 +65,8 @@ LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 #define BATTERY_CRITICAL_THRESHOLD 10
 
 // Intervalo de amostragem da bateria (ms)
-#define BATTERY_SAMPLING_INTERVAL_MS 1000
+// Coleira BLE: prioriza autonomia e reduz wakeups/ADC.
+#define BATTERY_SAMPLING_INTERVAL_MS 60000
 
 // === CONFIGURAÇÃO DOS LEDS ===
 
@@ -465,7 +466,7 @@ int main(void)
 	// === SISTEMA PRONTO ===
 	
 	LOG_INF("=============================================");
-	LOG_INF("   SISTEMA INICIALIZADO - MODO ECO");
+	LOG_INF("   SISTEMA INICIALIZADO COM SUCESSO");
 	LOG_INF("=============================================");
 	LOG_INF("");
 	LOG_INF("Configurações de Economia:");
@@ -490,12 +491,7 @@ int main(void)
 	LOG_INF("=============================================");
 	
 	// Loop infinito - sistema controlado por eventos via callbacks
-	while (1)
-	{
-		k_sleep(K_SECONDS(60));
-		// Se precisar parar a amostragem em algum momento:
-		// (void)battery_stop_sampling();
-	}
+	k_sleep(K_FOREVER);
 	
 	return 0;
 }
