@@ -1,0 +1,79 @@
+/*
+ * Copyright (c) 2024 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	aliases {
+		pwm-led0 = &pwm_led0;
+		ledverde = &led_verde;
+		ledazul = &led_azul;
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		pwm_led0: pwm_led_0 {
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+			label = "PWM LED Red";
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led_verde: led_verde {
+			gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
+			label = "LED Verde";
+		};
+		led_azul: led_azul {
+			gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
+			label = "LED Azul";
+		};
+	};
+
+	/* Configuração para leitura de bateria via ADC - Canal 7 (AIN7/P0.31) */
+	zephyr,user {
+		io-channels = <&adc 7>;
+	};
+
+	xiao_ble_battery_dev: xiao_ble_battery_dev {
+		compatible = "xiao-ble-battery";
+		charging-enable-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+		read-enable-gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+		charge-speed-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+		adc-channel = <NRF_SAADC_AIN7>;
+	};
+};
+
+/* Habilita conversor DC/DC para economia de energia (~40% menos consumo) */
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&pinctrl {
+	pwm0_default: pwm0_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 28)>;
+			//nordic,invert;
+		};
+	};
+
+	pwm0_sleep: pwm0_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 28)>;
+			low-power-enable;
+		};
+	};
+};
+
+/* Habilita ADC para leitura de bateria */
+&adc {
+	status = "okay";
+};
