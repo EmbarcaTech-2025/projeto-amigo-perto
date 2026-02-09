@@ -168,9 +168,9 @@ west flash
 - [x] Otimizar consumo de energia - Primeira versão
 - [x] Desenvolver aplicativo Android
 - [x] Testes de consumo de energia
-- [ ] Integração com o aplicativo
-- [ ] Testes avançados
-- [ ] Integração com o case
+- [x] Integração com o aplicativo
+- [x] Testes avançados
+- [x] Integração com o case
 
 
 ## Contato
