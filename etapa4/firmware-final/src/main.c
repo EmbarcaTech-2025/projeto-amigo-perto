@@ -57,8 +57,9 @@ LOG_MODULE_REGISTER(MainApp, LOG_LEVEL_INF);
 #define LED_BLINK_OFF_MS  1950
 
 // Intervalo de advertising BLE em milissegundos
-// 1000ms = bom balanço entre descoberta e economia de bateria
-#define ADV_INTERVAL_MS 1000
+// Mais amostras de RSSI (melhor “estabilidade” no front-end), com maior consumo.
+#define ADV_INTERVAL_MIN_MS 50
+#define ADV_INTERVAL_MAX_MS 50
 
 // Threshold de bateria crítica (percentual)
 // Abaixo deste valor, um warning é exibido
@@ -403,8 +404,8 @@ int main(void)
 	
 	// Configura parâmetros de advertising otimizados
 	hal_ble_adv_params_t adv_params = {
-		.interval_min_ms = ADV_INTERVAL_MS,   // 1000ms (economiza bateria)
-		.interval_max_ms = ADV_INTERVAL_MS,   // Intervalo fixo
+		.interval_min_ms = ADV_INTERVAL_MIN_MS,
+		.interval_max_ms = ADV_INTERVAL_MAX_MS,
 		.connectable = true,                  // Aceita conexões
 		.use_identity = true,                 // Usa MAC fixo (rastreável)
 	};
@@ -416,7 +417,7 @@ int main(void)
 		return -1;
 	}
 	
-	LOG_INF("Advertising iniciado - Intervalo: %d ms (economia de energia)", ADV_INTERVAL_MS);
+	LOG_INF("Advertising iniciado - Intervalo: %u-%u ms", ADV_INTERVAL_MIN_MS, ADV_INTERVAL_MAX_MS);
 	LOG_INF("");
 
 	// === ETAPA 6: Inicialização da Bateria (best-effort) ===
