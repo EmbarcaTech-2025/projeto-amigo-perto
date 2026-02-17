@@ -351,7 +351,7 @@ Este projeto está licenciado conforme o arquivo [LICENSE](LICENSE).
 
 ## 🙏 Agradecimentos
 
-Agradecimentos às comunidades do **Zephyr RTOS** e **Nordic Semiconductor (nRF Connect SDK)** pelas ferramentas e exemplos que aceleram o desenvolvimento.
+Agradecemos ao **Programa EmbarcaTech 2025** pela oportunidade de desenvolvimento deste projeto, aos mentores pelo suporte técnico e a todos que contribuíram para o sucesso desta iniciativa.
 
 ---
 
