@@ -6,6 +6,12 @@
 ![Firmware](https://img.shields.io/badge/Firmware-Zephyr%20%2B%20nRF%20Connect%20SDK-orange)
 ![Aplicativo](https://img.shields.io/badge/Aplicativo-Angular%20(PWA)-purple)
 
+## 🌐 Web App (produção)
+
+**Acesse o aplicativo web** no Google Chrome:
+
+https://amigopertov2-49090345-fc8b8.web.app
+
 ## 📋 Sobre o Projeto
 
 O **Amigo Perto** é um sistema (hardware + firmware + aplicativo) para **monitoramento de proximidade via Bluetooth Low Energy (BLE)**, voltado para **segurança de pets** em cenários urbanos, semiurbanos e rurais.
@@ -75,6 +81,9 @@ Nesta pasta serão armazenados os artefatos de hardware para fabricação e edi�
 - Gerbers para fabricação da PCB
 - PDFs do esquemático e da PCB (exportados do Altium)
 - Arquivos do projeto para abrir/editar no Altium
+
+Documentação do hardware (arquivos Altium, pacote de Gerbers e modelos 3D):
+- [Hardware/README.md](Hardware/README.md)
 
 ---
 
@@ -345,6 +354,7 @@ Essa abordagem torna o “domo virtual” mais adaptável a cenários abertos, u
 - 📌 Blueprint do app (fases/decisões de UX): [Aplicativo/blueprint.md](Aplicativo/blueprint.md)
 - 🧠 Firmware (documentação principal): [Firmware/amigo-perto-fw/README.md](Firmware/amigo-perto-fw/README.md)
 - 🔎 Firmware (entrada do código): [Firmware/amigo-perto-fw/src/main.c](Firmware/amigo-perto-fw/src/main.c)
+- 🧩 Hardware (documentação principal): [Hardware/README.md](Hardware/README.md)
 
 ---
 
