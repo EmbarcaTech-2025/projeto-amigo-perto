@@ -63,6 +63,8 @@ Este repositório está organizado por módulos do sistema:
 - Projeto para **nRF Connect SDK** / **Zephyr**
 - Implementa advertising, GATT e controle de buzzer
 - Pasta principal: 📁 [Firmware/amigo-perto-fw/](Firmware/amigo-perto-fw/)
+- Documentação do firmware (arquitetura, UUIDs/GATT, pinos/overlay, build/flash e troubleshooting):
+  - [Firmware/amigo-perto-fw/README.md](Firmware/amigo-perto-fw/README.md)
 
 ### 📁 [Firmware/releases/](Firmware/releases/) — Release para Flash
 - Arquivo `.uf2` da versão final para gravação rápida na placa
@@ -341,7 +343,8 @@ Essa abordagem torna o “domo virtual” mais adaptável a cenários abertos, u
 
 - 📱 App (funcionalidades, comandos, build/test): [Aplicativo/README.md](Aplicativo/README.md)
 - 📌 Blueprint do app (fases/decisões de UX): [Aplicativo/blueprint.md](Aplicativo/blueprint.md)
-- 🧠 Firmware (entrada principal): [Firmware/amigo-perto-fw/src/main.c](Firmware/amigo-perto-fw/src/main.c)
+- 🧠 Firmware (documentação principal): [Firmware/amigo-perto-fw/README.md](Firmware/amigo-perto-fw/README.md)
+- 🔎 Firmware (entrada do código): [Firmware/amigo-perto-fw/src/main.c](Firmware/amigo-perto-fw/src/main.c)
 
 ---
 
