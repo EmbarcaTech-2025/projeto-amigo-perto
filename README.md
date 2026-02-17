@@ -101,7 +101,13 @@ git clone <repository-url>
 cd projeto-amigo-perto
 ```
 
-### 3) 🔧 Firmware — Build e Flash (via west)
+### 3) ⚡ Firmware — Flash (recomendado via UF2)
+
+Para flashar a versão final, use o arquivo `.uf2` em [Firmware/releases/](Firmware/releases/):
+
+- Ex.: [Firmware/releases/amigo-perto-v1.0.0.uf2](Firmware/releases/amigo-perto-v1.0.0.uf2)
+
+### 4) 🔧 Firmware — Build/Flash via west (opcional para desenvolvimento)
 
 Dentro de [Firmware/amigo-perto-fw/](Firmware/amigo-perto-fw/):
 
@@ -112,10 +118,6 @@ west flash
 ```
 
 > Dica: também é possível abrir a pasta do firmware no VS Code com a extensão da Nordic e compilar/flashar pela UI.
-
-### 4) ⚡ Firmware — Flash rápido via UF2
-
-Use o arquivo em [Firmware/releases/](Firmware/releases/) (ex.: `amigo-perto-v1.0.0.uf2`) conforme o modo UF2 da sua placa.
 
 ### 5) 🌐 Aplicativo — Rodar localmente
 
@@ -351,7 +353,7 @@ Este projeto está licenciado conforme o arquivo [LICENSE](LICENSE).
 
 ## 🙏 Agradecimentos
 
-Agradecemos ao **Programa EmbarcaTech 2025** pela oportunidade de desenvolvimento deste projeto, aos mentores pelo suporte técnico e a todos que contribuíram para o sucesso desta iniciativa.
+Agradecemos ao **Programa EmbarcaTech** pela oportunidade de desenvolvimento deste projeto, aos mentores pelo suporte técnico e a todos que contribuíram para o sucesso desta iniciativa.
 
 ---
 
