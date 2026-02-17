@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "amigopertov2-49090345-fc8b8",
+    "public": "dist/amigoperto",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

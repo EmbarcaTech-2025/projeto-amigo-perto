@@ -1,52 +1,256 @@
 # Amigo Perto – Monitoramento de Proximidade BLE para PETs
 
-Firmware embarcado em C para microcontroladores da Nordic Semiconductor, com comunicação Bluetooth Low Energy (BLE). O sistema monitora a proximidade entre o cão e o tutor, acionando um alerta sonoro na coleira quando o animal ultrapassa um limite configurado.
+![Status](https://img.shields.io/badge/Status-Conclu%C3%ADdo-green)
+![Vers%C3%A3o](https://img.shields.io/badge/Vers%C3%A3o-1.0.0-blue)
+![Plataforma](https://img.shields.io/badge/Plataforma-XIAO%20nRF52840-red)
+![Firmware](https://img.shields.io/badge/Firmware-Zephyr%20%2B%20nRF%20Connect%20SDK-orange)
+![Aplicativo](https://img.shields.io/badge/Aplicativo-Angular%20(PWA)-purple)
 
-## Objetivo do Projeto
+## 📋 Sobre o Projeto
+
+O **Amigo Perto** é um sistema (hardware + firmware + aplicativo) para **monitoramento de proximidade via Bluetooth Low Energy (BLE)**, voltado para **segurança de pets** em cenários urbanos, semiurbanos e rurais.
+
+Em resumo, ele resolve o problema de “perdi a noção de distância do pet” com um **domo virtual de proximidade**:
+
+- 📶 Monitora **RSSI** e classifica a proximidade em **Perto / Médio / Longe** (faixas)
+- 🚨 Quando atinge **Longe**, o app alerta o tutor
+- 🔊 O tutor pode **acionar manualmente** um beep na coleira para chamar a atenção do pet e reforçar o adestramento
+
+### 🎯 Objetivo Principal
 
 Desenvolver uma coleira eletrônica capaz de:
 
-- Estabelecer conexão BLE segura com o smartphone do tutor
-- Fornecer leitura de RSSI para o aplicativo móvel
-- Receber comandos remotos para acionamento do buzzer
-- Reportar status de bateria em tempo real
-- Manter consumo de energia reduzido para operação contínua
+- ✅ **Estabelecer conexão BLE** entre tutor e coleira (BLE 5.x)
+- 📶 **Monitorar RSSI continuamente** para detectar variações de proximidade
+- 🧠 **Classificar proximidade por faixas** (Perto / Médio / Longe) com base em RSSI filtrado
+- 🚨 **Acionar alerta no app** quando estiver em “Longe”
+- 🔊 **Receber comandos remotos** para acionar o buzzer (beep) na coleira
+- 🔋 **Reportar status de bateria** via BLE (Battery Service 0x180F)
+- 🌙 **Otimizar consumo de energia** para operação contínua com bateria recarregável
 
-## Funcionalidades Principais
+### 👥 Equipe de Desenvolvimento
 
-- BLE 5.x (advertising e GATT)
-- Serviço GATT customizado para controle do buzzer
-- Serviço GATT padrão Battery (0x180F)
-- Controle de buzzer via PWM com modo intermitente
-- Monitoramento de bateria via ADC
-- Aplicativo móvel para leitura de RSSI, cálculo de distância e controle remoto
+- **Eric Senne Roma**
+- **Vitor Gomes**
+- **Antônio Almeida**
 
-## Arquitetura
+**Data:** Fevereiro de 2026
 
-Camadas de software utilizadas:
+---
+
+## 🧭 Visão Geral do Sistema
+
+- **Hardware:** XIAO nRF52840 + bateria Li‑Po recarregável (USB‑C) + buzzer + LEDs de status
+  - Observação: a indicação de carga (LED ao carregar) pode ser do **circuito/carregador da placa**, independente do firmware
+- **Firmware (Zephyr / nRF Connect SDK):** advertising, conexão BLE, GATT (Battery + serviço custom) e controle do buzzer
+- **Aplicativo (Angular PWA):** Web Bluetooth para scan/conexão, leitura de RSSI, **classificação por faixas** e envio de comandos
+
+---
+
+## 🏗️ Estrutura do Repositório
+
+Este repositório está organizado por módulos do sistema:
+
+### 📁 [Aplicativo/](Aplicativo/) — Aplicativo Web (PWA)
+- Código do app em **Angular 21+**
+- Conexão BLE via **Web Bluetooth API**
+- Radar de proximidade por **RSSI** + alertas sonoros
+- Documentos:
+  - [README do App](Aplicativo/README.md)
+  - [Blueprint/Especificação](Aplicativo/blueprint.md)
+
+### 📁 [Firmware/](Firmware/) — Firmware (Zephyr RTOS)
+- Projeto para **nRF Connect SDK** / **Zephyr**
+- Implementa advertising, GATT e controle de buzzer
+- Pasta principal: 📁 [Firmware/amigo-perto-fw/](Firmware/amigo-perto-fw/)
+
+### 📁 [Firmware/releases/](Firmware/releases/) — Release para Flash
+- Arquivo `.uf2` da versão final para gravação rápida na placa
+  - Ex.: [Firmware/releases/amigo-perto-v1.0.0.uf2](Firmware/releases/amigo-perto-v1.0.0.uf2)
+
+### 📁 [Hardware/](Hardware/) — PCB e Projeto Eletrônico
+Nesta pasta serão armazenados os artefatos de hardware para fabricação e edição:
+- Gerbers para fabricação da PCB
+- PDFs do esquemático e da PCB (exportados do Altium)
+- Arquivos do projeto para abrir/editar no Altium
+
+---
+
+## 🚀 Quick Start
+
+### 1) 📋 Pré-requisitos
+
+**Hardware**
+- Placa: **XIAO nRF52840**
+- Buzzer piezoelétrico (PWM)
+- Bateria LiPo 1S (3.0V–4.2V)
+
+**Firmware**
+- VS Code + **nRF Connect for VS Code** (extensões Nordic)
+- **nRF Connect SDK** instalado/configurado (Zephyr + west)
+
+**Aplicativo**
+- Node.js + npm
+- Navegador com Web Bluetooth (na prática: **Chrome/Edge no Android/desktop**)
+  - Observação: Web Bluetooth tem suporte limitado/variável em iOS
+
+### 2) ⬇️ Clone do repositório
+
+```bash
+git clone <repository-url>
+cd projeto-amigo-perto
+```
+
+### 3) 🔧 Firmware — Build e Flash (via west)
+
+Dentro de [Firmware/amigo-perto-fw/](Firmware/amigo-perto-fw/):
+
+```bash
+cd Firmware/amigo-perto-fw
+west build -b xiao_ble/nrf52840 --pristine
+west flash
+```
+
+> Dica: também é possível abrir a pasta do firmware no VS Code com a extensão da Nordic e compilar/flashar pela UI.
+
+### 4) ⚡ Firmware — Flash rápido via UF2
+
+Use o arquivo em [Firmware/releases/](Firmware/releases/) (ex.: `amigo-perto-v1.0.0.uf2`) conforme o modo UF2 da sua placa.
+
+### 5) 🌐 Aplicativo — Rodar localmente
+
+Dentro de [Aplicativo/](Aplicativo/):
+
+```bash
+cd Aplicativo
+npm install
+npm run start
+```
+
+Ou, se preferir:
+
+```bash
+cd Aplicativo
+npx ng serve
+```
+
+---
+
+## 🧑‍💻 Como usar o dispositivo (passo a passo)
+
+1. **Ligue o dispositivo**
+  - Acione a **chave de alimentação** no módulo.
+2. **Aguarde a inicialização**
+  - Confirme que o **LED azul está piscando** (Bluetooth ativo e pronto para pareamento).
+3. **(Primeiro uso) Habilite suporte no navegador**
+  - No Chrome do celular, acesse: `chrome://flags`
+  - Ative **Experimental Web Platform features**
+  - Reinicie o navegador (se solicitado)
+4. **Acesse o aplicativo web**
+  - Abra no Chrome: https://amigopertov2-49090345-fc8b8.web.app
+5. **Pareie o dispositivo**
+  - Clique em **Procurar Amigo**
+  - Selecione **Amigo Perto** na lista e confirme o pareamento
+6. **Visualize a proximidade**
+  - O radar exibe a faixa: **Perto / Médio / Longe**
+7. **Conecte para funções completas**
+  - Clique em **Conectar** para ver **bateria (%)** e habilitar o controle do buzzer
+  - Quando conectado, o **LED verde** indica o estado conectado
+8. **Use o alarme (buzzer)**
+  - **▲ (seta para cima):** liga alarme intermitente
+  - **● (botão central):** desliga o alarme imediatamente
+
+---
+
+## ✅ Requisitos (resumo)
+
+**Funcionais (principais)**
+
+- BLE 5.x para comunicação (coleira ↔ tutor)
+- Monitoramento contínuo de RSSI
+- Classificação em **faixas Perto/Médio/Longe** (com filtragem e histerese)
+- Alerta no app quando estiver em **Longe**
+- Comando remoto para **beep** no hardware
+- Leitura de bateria via **Battery Service (0x180F)**
+
+**Não funcionais (principais)**
+
+- Baixo consumo e bateria recarregável
+- Dispositivo compacto/leve e seguro ao pet
+- Comunicação BLE robusta (interferências e perdas momentâneas)
+- Evolução para **hardware dedicado** (PCB própria + integração mecânica)
+
+---
+
+## 📦 Lista de Materiais (Protótipo)
+
+- Placa de desenvolvimento **XIAO nRF52840** (SoC BLE integrado)
+- **Buzzer passivo** eletromagnético SMD 3,6 V (MLT-8530 ou equivalente)
+- **Transistor NPN** SMD (BC817 ou equivalente)
+- **Resistor 330 Ω** (limitador de corrente/base)
+- **Chave deslizante (slide switch)** 3 pinos, pitch 2 mm (MSK-03EH ou equivalente)
+- **Bateria Li‑Po 3,7 V – 100 mAh** (recarregável)
+- **PCB dedicada** ao projeto
+- **Carcaça impressa em 3D** para acomodação da PCB e bateria
+- **Cabo USB‑C** (dados e alimentação) para gravação do firmware e recarga da bateria
+
+## ⚙️ Características Técnicas
+
+### 🛠️ Hardware Utilizado
+
+| Componente | Função | Observações |
+|---|---|---|
+| **XIAO nRF52840** | MCU principal | BLE 5.x, baixo consumo |
+| **Buzzer piezoelétrico** | Alerta sonoro | Controle via PWM |
+| **Bateria LiPo 1S** | Alimentação | 3.0V–4.2V |
+| **LED Verde** | Status de conexão | Pisca com duty-cycle reduzido |
+| **LED Azul** | Status de advertising | Pisca com duty-cycle reduzido |
+
+### 📊 Funcionalidades Principais
+
+- **BLE 5.x**: advertising + conexão como periférico
+- **Serviço GATT customizado (Buzzer Service)** para controle remoto do alarme
+- **Battery Service padrão (0x180F)** para nível de bateria (característica 0x2A19)
+- **Buzzer via PWM** com modo intermitente (economia de energia)
+- **Monitoramento de bateria via ADC**
+- **Power Management no Zephyr** (tickless + DC/DC via devicetree overlay)
+
+---
+
+## 🔬 Principais Decisões e Desafios Superados
+
+- **RSSI em metros não é confiável:** ao avaliar o uso de RSSI para distância absoluta, observou-se baixa precisão por obstáculos, multipercurso e interferências.
+- **Mudança de estratégia (validada na prática):** o sistema passou a operar por **faixas de proximidade** (Perto/Médio/Longe), com referência relacional ao comportamento do sinal no ambiente.
+- **Estabilidade do sinal:** aplicação de técnicas de tratamento/filtragem e histerese para reduzir oscilações naturais e evitar “chattering” próximo ao limiar.
+- **Robustez BLE:** ajuste de parâmetros (potência de TX e intervalos de advertising) e estratégias de reconexão para reduzir falsos alarmes e recuperar de perdas momentâneas.
+- **Energia e ergonomia:** otimizações de baixo consumo (LEDs com duty-cycle reduzido, tickless, DC/DC) e evolução para hardware dedicado com PCB própria e case customizada.
+
+---
+
+## 🧩 Arquitetura
+
+Camadas principais:
 
 **Aplicação**
 - Loop principal
-- Callbacks BLE
-- Lógica de controle
+- Callbacks BLE/GATT
+- Lógica de controle e estados (advertising / conectado)
 
 **HAL (Hardware Abstraction Layer)**
 - BLE
-- Buzzer
-- Bateria
+- Buzzer (PWM)
+- Bateria (ADC)
 
 **Serviços GATT**
-- Buzzer Service (customizado)
-- Battery Service (padrão 0x180F)
+- Buzzer Service (custom)
+- Battery Service (0x180F)
 
-**Drivers e Stack BLE**
-- Zephyr RTOS com nRF Connect SDK
+**Stack/Drivers**
+- Zephyr RTOS + nRF Connect SDK
+- Drivers (GPIO, PWM, ADC)
+- Power management
 
-**Hardware**
-- XIAO nRF52840
-- Buzzer piezoelétrico
-- Bateria Li-Po
-- LEDs de status
+Representação em blocos:
 
 ```
 ┌─────────────────────────────────────┐
@@ -61,7 +265,7 @@ Camadas de software utilizadas:
 │  - hal/battery.c  (ADC)             │
 ├─────────────────────────────────────┤
 │      Serviços GATT (gatt/)          │
-│  - buzzer_service.c  (customizado)  │
+│  - buzzer_service.c  (custom)       │
 │  - battery_service.c (0x180F)       │
 ├─────────────────────────────────────┤
 │        Zephyr RTOS + nRF SDK        │
@@ -71,108 +275,92 @@ Camadas de software utilizadas:
 └─────────────────────────────────────┘
 ```
 
-## Estrutura de Diretórios
+---
 
-```
-amigo_perto_v2/
-├── src/
-│   ├── main.c
-│   ├── hal/
-│   │   ├── ble.c
-│   │   ├── buzzer.c
-│   │   └── battery.c
-│   └── gatt/
-│       ├── buzzer_service.c
-│       └── battery_service.c
-├── include/
-│   ├── hal/
-│   └── gatt/
-├── boards/
-│   ├── xiao_ble.overlay
-│   └── nrf52840dongle_nrf52840.overlay
-├── prj.conf
-├── CMakeLists.txt
-└── README.md
-```
+## 📱 Integração com o Aplicativo
 
-## Hardware Utilizado
+Arquitetura do sistema:
 
-- **Microcontrolador**: XIAO nRF52840 (Nordic nRF52840)
-- **Conexão**: BLE 5.3
-- **Buzzer** piezoelétrico para alerta (18kHz)
-- **Bateria** tipo Li-Po (3.0V - 4.2V)
-- **LEDs** de status (verde e azul)
-
-## Integração com o Aplicativo
-
-Arquitetura do Sistema
 ```
 ┌──────────────┐         BLE          ┌──────────────┐
 │  Smartphone  │◄────────────────────►│   Coleira    │
-│              │   RSSI (lido pelo    │  (Firmware)  │
-│  - Lê RSSI   │    aplicativo)       │              │
-│  - Calcula   │                      │  - Recebe    │
-│    distância │   Comandos GATT      │    comandos  │
-│  - Envia     ├─────────────────────►│  - Aciona    │
-│    comandos  │   (buzzer ON/OFF)    │    buzzer    │
-│  - Monitora  │                      │  - Reporta   │
-│    bateria   │◄─────────────────────┤    bateria   │
-└──────────────┘   Status (battery)   └──────────────┘
+│ (PWA/Browser)│   RSSI (lido pelo    │  (Firmware)  │
+│              │    aplicativo)       │              │
+│  - Lê RSSI   │                      │  - Recebe    │
+│  - Classifica│   Comandos GATT      │    comandos  │
+│    por faixa ├─────────────────────►│  - Aciona    │
+│  - Envia     │   (buzzer ON/OFF)    │    buzzer    │
+│    comandos  │                      │  - Reporta   │
+│  - Monitora  │◄─────────────────────┤    bateria   │
+│    bateria   │   Battery (0x180F)   │              │
+└──────────────┘                      └──────────────┘
 ```
 
-## Fluxo de Operação
+---
 
-1. O aplicativo realiza **scan BLE** e se conecta à coleira.
-2. O aplicativo lê o **RSSI periodicamente** por meio de callbacks BLE nativos.
-3. A distância até a coleira é estimada usando um **modelo de propagação de sinal**.
-4. A distância estimada é comparada com o **limiar configurado pelo usuário**.
-5. Se o limiar for ultrapassado, o aplicativo escreve **0x01** na característica **Buzzer Intermittent**.
-6. O firmware aciona o **buzzer em modo intermitente**, reduzindo o consumo de energia.
-7. O aplicativo lê periodicamente a característica **Battery Level (0x2A19)** para monitoramento da bateria.
+## 🔄 Fluxo de Operação
 
-## Como Compilar
+Em termos de uso prático:
 
-**Requisitos:**
-- nRF Connect SDK v3.1.0+
-- VS Code com extensões Nordic (nRF Connect for VS Code)
-- Toolchain ARM GCC
+1. Ao ligar o dispositivo, o sistema inicia o boot.
+2. O **LED azul** pisca indicando **modo advertising** (pronto para pareamento via BLE).
+3. No aplicativo, ao iniciar a varredura (scan), o usuário já consegue **monitorar o RSSI** e a UI classifica a proximidade em **Perto/Médio/Longe**.
+4. Se a faixa atingir **“Longe”**, o sistema emite **alerta no celular** (ex.: beep/vibração/feedback visual, conforme UI).
+5. Ao clicar em **Conectar**, o usuário passa a ter acesso às características GATT:
+  - leitura de **bateria (%)** via Battery Service
+  - envio de comandos para **acionar/desligar** o buzzer no hardware
+6. Caso o tutor deseje, pode **acionar manualmente** o beep para chamar a atenção do pet e reforçar o treinamento.
 
-**Passos:**
-```bash
-# Clone o repositório
-git clone <repository-url>
-cd amigo_perto_v2
+---
 
-# Compile o projeto
-west build -b xiao_ble/nrf52840 --pristine
+## 📏 Lógica de Distância (RSSI → Distância)
 
-# Flash no hardware
-west flash
-```
+Durante o desenvolvimento, foi implementada leitura de RSSI com técnicas de estabilização. Entretanto, o projeto concluiu que **RSSI não é adequado para distância absoluta (em metros)** de forma consistente.
 
-## Lógica de Distância
+Assim, o sistema opera com **faixas de proximidade**:
 
-**A lógica de conversão RSSI → distância é implementada no aplicativo móvel**, não no firmware:
+- O app lê RSSI via BLE
+- O app aplica tratamento/filtragem e classifica em **Perto / Médio / Longe**
+- O app decide quando alertar e quando enviar comando de beep
+- O firmware executa o comando (buzzer) e reporta status (bateria)
 
-1. **Aplicativo** lê RSSI periodicamente via BLE
-2. **Aplicativo** calcula distância usando modelo de propagação log-distance
-3. **Aplicativo** compara com limiar configurado
-4. **Se ultrapassar**: aplicativo envia comando para ativar buzzer via GATT
-5. **Firmware** aciona buzzer em modo intermitente (economia de energia)
+Essa abordagem torna o “domo virtual” mais adaptável a cenários abertos, urbanos e ambientes com obstáculos, já que a referência é relacional ao comportamento do sinal no ambiente.
 
+---
 
-## Próximas Etapas
+## 🎯 Público-alvo e Evolução (curto)
 
-- [x] Implementar HAL (BLE, Buzzer, Battery)
-- [x] Implementar serviços GATT
-- [x] Otimizar consumo de energia - Primeira versão
-- [x] Desenvolver aplicativo Android
-- [x] Testes de consumo de energia
-- [x] Integração com o aplicativo
-- [x] Testes avançados
-- [x] Integração com o case
+- Tutores domésticos (urbano/semiurbano) e tutores em áreas rurais/propriedades amplas
+- Expansões futuras possíveis (mesma base BLE): crianças, idosos e objetos
 
+---
 
-## Contato
+## 📁 Documentação e Recursos
 
-Equipe: Eric Senne Roma, Vitor Gomes e Antônio Almeida
+- 📱 App (funcionalidades, comandos, build/test): [Aplicativo/README.md](Aplicativo/README.md)
+- 📌 Blueprint do app (fases/decisões de UX): [Aplicativo/blueprint.md](Aplicativo/blueprint.md)
+- 🧠 Firmware (entrada principal): [Firmware/amigo-perto-fw/src/main.c](Firmware/amigo-perto-fw/src/main.c)
+
+---
+
+## 📜 Licença
+
+Este projeto está licenciado conforme o arquivo [LICENSE](LICENSE).
+
+---
+
+## 🙏 Agradecimentos
+
+Agradecimentos às comunidades do **Zephyr RTOS** e **Nordic Semiconductor (nRF Connect SDK)** pelas ferramentas e exemplos que aceleram o desenvolvimento.
+
+---
+
+<div align="center">
+
+![BLE](https://img.shields.io/badge/BLE-5.x-blue?style=for-the-badge)
+![Nordic](https://img.shields.io/badge/Nordic-nRF52840-red?style=for-the-badge)
+![Angular](https://img.shields.io/badge/Angular-PWA-purple?style=for-the-badge)
+
+**Amigo Perto – Projeto Integrado (Hardware + Firmware + App) | 2026**
+
+</div>

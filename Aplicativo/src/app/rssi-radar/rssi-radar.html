@@ -1,0 +1,5 @@
+<div class="radar-container" [class]="proximidade() | lowercase">
+    <div class="radar-sweep"></div>
+    <div class="dot" [style]="dotStyle()"></div>
+    <span class="proximity-text">{{ proximidade() }}</span>
+</div>

@@ -1,0 +1,13 @@
+<div class="d-pad-container">
+  <div class="d-pad">
+    <button class="up" (click)="onCommand(1)">▲</button>
+    <button class="left" (click)="onCommand(3)">◀</button>
+    <button class="center" (click)="onCommand(0)"></button>
+    <button class="right" (click)="onCommand(4)">▶</button>
+    <button class="down" (click)="onCommand(2)">▼</button>
+  </div>
+  <button class="disconnect-button" (click)="disconnect.emit()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a7.5 7.5 0 1 0-11.4 0"/><path d="M12 2v5"/></svg>
+    Desconectar
+  </button>
+</div>

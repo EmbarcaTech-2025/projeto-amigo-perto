@@ -1,0 +1,30 @@
+/* Estilos Globais */
+:root {
+  --primary-color: #007bff; /* Azul elétrico para elementos interativos */
+  --danger-color: #dc3545;  /* Vermelho para botões de ação destrutiva */
+  --background-color: #282c34;
+  --text-color: #ffffff;
+  --d-pad-color: #555;
+  --d-pad-center-color: #333;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

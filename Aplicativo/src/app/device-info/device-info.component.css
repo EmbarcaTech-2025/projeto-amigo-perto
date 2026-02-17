@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+h2 {
+  margin-top: 0;
+  font-weight: 400;
+  color: var(--on-surface-color);
+}
+
+p {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin: 0.5rem 0;
+}
+
+button {
+  margin-top: 1rem;
+  background-color: var(--error-color);
+  color: var(--on-primary-color);
+}

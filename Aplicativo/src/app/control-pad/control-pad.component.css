@@ -1,0 +1,78 @@
+
+.d-pad-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 2rem; /* Espaçamento entre o D-pad e o botão de desconectar */
+}
+
+.d-pad {
+  display: grid;
+  grid-template-areas:
+    ". up ."
+    "left center right"
+    ". down .";
+  grid-template-rows: 70px 70px 70px;
+  grid-template-columns: 70px 70px 70px;
+  gap: 12px; /* Aumentei o espaço para um visual mais limpo */
+}
+
+/* Estilo base para todos os botões do D-pad com efeito Neumórfico */
+.d-pad button {
+  border: none;
+  border-radius: 20px; /* Bordas mais suaves */
+  font-size: 2.5rem; /* Ícones maiores e mais fáceis de tocar */
+  color: var(--on-surface-color);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  background: linear-gradient(145deg, #202020, #1a1a1a);
+  /* Efeito "levantado" do Neumorfismo */
+  box-shadow: 8px 8px 16px #0f0f0f, 
+              -8px -8px 16px #2f2f2f;
+}
+
+/* Efeito de "pressionado" para todos os botões do D-pad */
+.d-pad button:active {
+  color: var(--primary-color);
+  /* Efeito "pressionado" do Neumorfismo (sombra interna) */
+  box-shadow: inset 6px 6px 12px #0f0f0f, 
+              inset -6px -6px 12px #2f2f2f;
+  transform: scale(0.97);
+  background: var(--background-color);
+}
+
+.up { grid-area: up; }
+.down { grid-area: down; }
+.left { grid-area: left; }
+.right { grid-area: right; }
+
+.center {
+  grid-area: center;
+  border-radius: 50%; /* Mantém o botão central circular */
+}
+
+/* Estilo para o botão de desconectar, consistente com o Neumorfismo */
+.disconnect-button {
+  background: #2172E5; /* <-- Cor de fundo alterada para azul */
+  color: #FFFFFF; /* <-- Cor do texto alterada para branco */
+  border: none;
+  border-radius: 15px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 6px 6px 12px #0a0a0a, -6px -6px 12px #3a3a3a;
+}
+
+.disconnect-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 8px 8px 18px #0a0a0a, -8px -8px 18px #3a3a3a;
+}
+
+.disconnect-button:active {
+  box-shadow: inset 4px 4px 8px #0a0a0a, inset -4px -4px 8px #3a3a3a;
+  transform: scale(0.98);
+}
