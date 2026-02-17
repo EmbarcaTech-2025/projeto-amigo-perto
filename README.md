@@ -81,6 +81,7 @@ Nesta pasta serão armazenados os artefatos de hardware para fabricação e edi�
 - Gerbers para fabricação da PCB
 - PDFs do esquemático e da PCB (exportados do Altium)
 - Arquivos do projeto para abrir/editar no Altium
+- Arquivos para fabricação da Case na impressora 3D
 
 Documentação do hardware (arquivos Altium, pacote de Gerbers e modelos 3D):
 - [Hardware/README.md](Hardware/README.md)
