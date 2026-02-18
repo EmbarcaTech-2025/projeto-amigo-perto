@@ -47,7 +47,6 @@ Desenvolver uma coleira eletrônica capaz de:
 ## 🧭 Visão Geral do Sistema
 
 - **Hardware:** XIAO nRF52840 + bateria Li‑Po recarregável (USB‑C) + buzzer + LEDs de status
-  - Observação: a indicação de carga (LED ao carregar) pode ser do **circuito/carregador da placa**, independente do firmware
 - **Firmware (Zephyr / nRF Connect SDK):** advertising, conexão BLE, GATT (Battery + serviço custom) e controle do buzzer
 - **Aplicativo (Angular PWA):** Web Bluetooth para scan/conexão, leitura de RSSI, **classificação por faixas** e envio de comandos
 
