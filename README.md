@@ -86,6 +86,10 @@ Nesta pasta serão armazenados os artefatos de hardware para fabricação e edi�
 Documentação do hardware (arquivos Altium, pacote de Gerbers e modelos 3D):
 - [Hardware/README.md](Hardware/README.md)
 
+### 📁 [Documentação/](Documentação/) — Documentos e Apresentações (PDF)
+- Compilado de entregas semanais, documentação final e apresentações por etapa
+- Índice/descrição dos arquivos: [Documentação/README.md](Documentação/README.md)
+
 ---
 
 ## 🚀 Quick Start
@@ -356,6 +360,7 @@ Essa abordagem torna o “domo virtual” mais adaptável a cenários abertos, u
 - 🧠 Firmware (documentação principal): [Firmware/amigo-perto-fw/README.md](Firmware/amigo-perto-fw/README.md)
 - 🔎 Firmware (entrada do código): [Firmware/amigo-perto-fw/src/main.c](Firmware/amigo-perto-fw/src/main.c)
 - 🧩 Hardware (documentação principal): [Hardware/README.md](Hardware/README.md)
+- 📚 Documentação do projeto (PDFs): [Documentação/README.md](Documentação/README.md)
 
 ---
 
