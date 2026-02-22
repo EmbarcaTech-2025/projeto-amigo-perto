@@ -15,6 +15,7 @@ Esta pasta reúne a **documentação do projeto** em formato PDF (documento fina
   - [Apresentação - Amigo Perto Etapa 2.pdf](Apresenta%C3%A7%C3%A3o%20-%20Amigo%20Perto%20Etapa%202.pdf)
   - [Apresentação - Amigo Perto Etapa 3.pdf](Apresenta%C3%A7%C3%A3o%20-%20Amigo%20Perto%20Etapa%203.pdf)
   - [Apresentação - Amigo Perto Etapa 4.pdf](Apresenta%C3%A7%C3%A3o%20-%20Amigo%20Perto%20Etapa%204.pdf)
+  - [Apresentação Final - Amigo Perto.pdf](Apresenta%C3%A7%C3%A3o%20Final%20-%20Amigo%20Perto.pdf)
 
 ## 🔗 Links úteis
 
